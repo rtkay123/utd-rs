@@ -21,14 +21,21 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(name: &str, tags: &str, is_task: bool, id: i64, priority: PriorityLevel) -> Self {
+    pub fn new(
+        name: &str,
+        tags: &str,
+        is_task: bool,
+        id: i64,
+        priority: PriorityLevel,
+        timestamp: u128,
+    ) -> Self {
         Self {
             id,
             name: name.trim().replace("  ", ""),
             tags: tags.to_string(),
             is_task,
             is_done: false,
-            timestamp: "hello".to_string(),
+            timestamp: timestamp.to_string(),
             in_progress: false,
             priority: priority.to_string(),
         }

@@ -1,4 +1,10 @@
-use std::{fs::File, io::Read, io::Write, path::PathBuf};
+use std::{
+    fs::File,
+    io::Read,
+    io::Write,
+    path::PathBuf,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use clap::{lazy_static::lazy_static, StructOpt};
 use regex::Regex;
@@ -22,6 +28,11 @@ fn main() -> Result<()> {
 fn new_entry(args: &utd::args::Cli) -> Result<()> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(@.\w+)").unwrap();
+    }
+    fn timestamp() -> std::time::Duration {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time is going backwards")
     }
     let entry_adder = |list: &[String],
                        is_task: bool,
@@ -58,6 +69,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
                 is_task,
                 len,
                 *priority.get(index).unwrap_or(&PriorityLevel::Normal),
+                timestamp().as_nanos(),
             );
             entries.push(task);
         }
