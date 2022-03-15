@@ -19,7 +19,7 @@ pub struct Cli {
     #[clap(short, long, multiple_values = true)]
     pub begin: Option<Vec<String>>,
 
-    /// Sort all tasks and notes
+    /// Sort task ids
     #[clap(short, long, arg_enum)]
     pub sort: Option<SortParam>,
 
@@ -28,19 +28,34 @@ pub struct Cli {
     pub tidy: bool,
 
     /// Set a priority level
-    #[clap(short, long, arg_enum)]
-    pub priority: Option<PriorityLevel>,
+    #[clap(short, long, arg_enum, multiple_values = true)]
+    pub priority: Option<Vec<PriorityLevel>>,
 
     /// Set log level
     #[clap(short, long, arg_enum)]
     pub log: Option<LogLevel>,
+
+    /// Set log level
+    #[clap(short, long)]
+    pub order_ids: bool,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
 pub enum PriorityLevel {
     Low,
-    Medium,
+    Normal,
     High,
+}
+
+impl ToString for PriorityLevel {
+    fn to_string(&self) -> String {
+        match &self {
+            PriorityLevel::Low => "low",
+            PriorityLevel::Normal => "normal",
+            PriorityLevel::High => "high",
+        }
+        .to_owned()
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]

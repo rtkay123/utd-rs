@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::args::PriorityLevel;
+
 pub type Tasks = Vec<Task>;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -15,18 +17,20 @@ pub struct Task {
     pub timestamp: String,
     #[serde(rename = "in_progress")]
     pub in_progress: bool,
+    pub priority: String,
 }
 
 impl Task {
-    pub fn new(name: &str, tags: &str, is_task: bool) -> Self {
+    pub fn new(name: &str, tags: &str, is_task: bool, id: i64, priority: PriorityLevel) -> Self {
         Self {
-            id: 0,
+            id,
             name: name.trim().replace("  ", ""),
             tags: tags.to_string(),
             is_task,
             is_done: false,
             timestamp: "hello".to_string(),
             in_progress: false,
+            priority: priority.to_string(),
         }
     }
 }
