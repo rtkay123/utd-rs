@@ -18,12 +18,12 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(name: &str, tags: &str) -> Self {
+    pub fn new(name: &str, tags: &str, is_task: bool) -> Self {
         Self {
             id: 0,
-            name: name.trim().to_string(),
+            name: name.trim().replace("  ", ""),
             tags: tags.to_string(),
-            is_task: false,
+            is_task,
             is_done: false,
             timestamp: "hello".to_string(),
             in_progress: false,
