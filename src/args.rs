@@ -11,6 +11,10 @@ pub struct Cli {
     #[clap(short, long, multiple_values = true)]
     pub add: Option<Vec<String>>,
 
+    /// Add a new task(s)
+    #[clap(short, long, multiple_values = true)]
+    pub delete: Option<Vec<String>>,
+
     /// Check/uncheck task(s) as complete
     #[clap(short, long, multiple_values = true)]
     pub check: Option<Vec<String>>,
@@ -19,7 +23,7 @@ pub struct Cli {
     #[clap(short, long, multiple_values = true)]
     pub begin: Option<Vec<String>>,
 
-    /// Sort task ids
+    /// Show tasks and sort
     #[clap(short, long, arg_enum)]
     pub sort: Option<SortParam>,
 
@@ -35,9 +39,9 @@ pub struct Cli {
     #[clap(short, long, arg_enum)]
     pub log: Option<LogLevel>,
 
-    /// Set log level
-    #[clap(short, long)]
-    pub order_ids: bool,
+    /// Make ids sequential
+    #[clap(short, long, long = "reset-ids")]
+    pub re_set_ids: bool,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]

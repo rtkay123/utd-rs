@@ -22,7 +22,46 @@ fn main() -> Result<()> {
     // Adding a new note/task
     if args.note.is_some() || args.add.is_some() {
         new_entry(&args)?;
+    } else if args.delete.is_some() {
+        delete_entry(&args.delete.unwrap())?;
     }
+
+    Ok(())
+}
+
+fn delete_entry(ids: &[String]) -> Result<()> {
+    let mut path = are_you_on_unix();
+    path.push(".utd.json");
+    let mut tasks: Tasks;
+    {
+        let read_file = std::fs::OpenOptions::new().read(true).open(&path).unwrap();
+        let mut buf_reader = std::io::BufReader::new(read_file);
+        let mut contents = String::new();
+        buf_reader.read_to_string(&mut contents).unwrap();
+        tasks = serde_json::from_str(&contents).unwrap();
+        for i in ids.to_vec().iter() {
+            tasks = tasks
+                .iter()
+                .filter_map(|f| {
+                    if f.id != i.parse::<i64>().unwrap() {
+                        Some(f.to_owned())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+        }
+    }
+    let mut path = are_you_on_unix();
+    path.push(".temp");
+    let mut temp = std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .open(&path)?;
+    write_to_file(&mut temp, &tasks);
+    let mut original = are_you_on_unix();
+    original.push(".utd.json");
+    std::fs::rename(path, original).unwrap();
     Ok(())
 }
 
@@ -75,7 +114,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
             entries.push(task);
         }
         tasks.append(&mut entries);
-        writeln!(file, "{}", serde_json::to_string_pretty(&tasks).unwrap()).unwrap();
+        write_to_file(file, &tasks);
     };
     let mut path = are_you_on_unix();
     path.push(".utd.json");
@@ -84,23 +123,30 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
         PriorityLevel::Normal;
         match args.add.as_ref() {
             Some(tasks) => tasks.len(),
+            // Safe to unwrap since we are sure one of them is some
             None => args.note.as_ref().unwrap().len(),
         }
     ];
 
     let mut vd = VecDeque::from_iter(args.priority.as_ref().unwrap_or(default_vec));
     if let Some(ref tasks) = args.add {
-        entry_adder(tasks, true, &mut read_file(&path)?, &path, &mut vd);
+        entry_adder(tasks, true, &mut file(&path, false, true)?, &path, &mut vd);
     }
     if let Some(ref notes) = args.note {
-        entry_adder(notes, false, &mut read_file(&path)?, &path, &mut vd);
+        entry_adder(notes, false, &mut file(&path, false, true)?, &path, &mut vd);
     }
     Ok(())
 }
 
-fn read_file(path: &PathBuf) -> Result<File> {
+fn file(path: &PathBuf, read: bool, write: bool) -> Result<File> {
     Ok(std::fs::OpenOptions::new()
         .create(true)
-        .write(true)
+        .write(write)
+        .read(read)
         .open(&path)?)
+}
+
+fn write_to_file(file: &mut File, tasks: &Tasks) {
+    writeln!(file, "{}", serde_json::to_string_pretty(tasks).unwrap()).unwrap();
+    trace!("tasks updated");
 }
