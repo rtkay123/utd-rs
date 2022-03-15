@@ -30,6 +30,10 @@ pub struct Cli {
     /// Set a priority level
     #[clap(short, long, arg_enum)]
     pub priority: Option<PriorityLevel>,
+
+    /// Set log level
+    #[clap(short, long, arg_enum)]
+    pub log: Option<LogLevel>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
@@ -37,6 +41,15 @@ pub enum PriorityLevel {
     Low,
     Medium,
     High,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+pub enum LogLevel {
+    Trace,
+    Debug,
+    Info,
+    Warning,
+    Error,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
