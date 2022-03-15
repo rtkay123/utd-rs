@@ -17,7 +17,7 @@ pub fn setup_logger(log_level: args::LogLevel) -> tracing_appender::non_blocking
             })
             .with_writer(file_writer)
             .with_ansi(false)
-            .pretty()
+            //.pretty()
             .finish(),
     )
     .expect("Unable to set global tracing subscriber");

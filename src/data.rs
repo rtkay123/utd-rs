@@ -16,3 +16,17 @@ pub struct Task {
     #[serde(rename = "in_progress")]
     pub in_progress: bool,
 }
+
+impl Task {
+    pub fn new(name: &str, tags: &str) -> Self {
+        Self {
+            id: 0,
+            name: name.trim().to_string(),
+            tags: tags.to_string(),
+            is_task: false,
+            is_done: false,
+            timestamp: "hello".to_string(),
+            in_progress: false,
+        }
+    }
+}
