@@ -1,4 +1,5 @@
 use std::{
+    collections::VecDeque,
     fs::File,
     io::Read,
     io::Write,
@@ -38,7 +39,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
                        is_task: bool,
                        file: &mut File,
                        path: &PathBuf,
-                       priority: &Vec<PriorityLevel>| {
+                       priority: &mut VecDeque<&PriorityLevel>| {
         let mut tasks: Tasks;
         {
             let file = std::fs::OpenOptions::new().read(true).open(path).unwrap();
@@ -59,7 +60,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
             Some(task) => task.id,
             None => 0,
         };
-        for (index, entry_name) in list.iter().enumerate() {
+        for entry_name in list.iter() {
             let tags: Vec<_> = RE.find_iter(entry_name).map(|f| f.as_str()).collect();
             let title = RE.replace_all(entry_name, "");
             len += 1;
@@ -68,7 +69,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
                 &tags.join(" "),
                 is_task,
                 len,
-                *priority.get(index).unwrap_or(&PriorityLevel::Normal),
+                *priority.pop_front().unwrap_or(&PriorityLevel::Normal),
                 timestamp().as_nanos(),
             );
             entries.push(task);
@@ -78,33 +79,28 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
     };
     let mut path = are_you_on_unix();
     path.push(".utd.json");
-    let mut file = std::fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .open(&path)?;
-
     // if note is some, iterate and add notes
+    let default_vec = &vec![
+        PriorityLevel::Normal;
+        match args.add.as_ref() {
+            Some(tasks) => tasks.len(),
+            None => args.note.as_ref().unwrap().len(),
+        }
+    ];
+
+    let mut vd = VecDeque::from_iter(args.priority.as_ref().unwrap_or(default_vec));
     if let Some(ref tasks) = args.add {
-        entry_adder(
-            tasks,
-            true,
-            &mut file,
-            &path,
-            args.priority
-                .as_ref()
-                .unwrap_or(&vec![PriorityLevel::Normal; tasks.len()]),
-        );
+        entry_adder(tasks, true, &mut read_file(&path)?, &path, &mut vd);
     }
     if let Some(ref notes) = args.note {
-        entry_adder(
-            notes,
-            false,
-            &mut file,
-            &path,
-            args.priority
-                .as_ref()
-                .unwrap_or(&vec![PriorityLevel::Normal; notes.len()]),
-        );
+        entry_adder(notes, false, &mut read_file(&path)?, &path, &mut vd);
     }
     Ok(())
+}
+
+fn read_file(path: &PathBuf) -> Result<File> {
+    Ok(std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .open(&path)?)
 }
