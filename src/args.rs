@@ -73,7 +73,6 @@ pub enum LogLevel {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
 pub enum SortParam {
-    Time,
+    Age,
     Priority,
-    Id,
 }

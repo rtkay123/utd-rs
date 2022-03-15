@@ -32,8 +32,26 @@ fn main() -> Result<()> {
     if args.check.is_some() {
         alter_tasks(&args.check.unwrap(), State::Completed)?;
     }
+    if args.tidy {
+        remove_completed()?;
+    }
 
     Ok(())
+}
+
+fn remove_completed() -> Result<()> {
+    let mut tasks = state_file_contents()?;
+    tasks = tasks
+        .iter()
+        .filter_map(|f| {
+            if f.is_done.to_string() != true.to_string() {
+                Some(f.to_owned())
+            } else {
+                None
+            }
+        })
+        .collect();
+    update_file(&tasks)?;
 }
 
 enum State {
