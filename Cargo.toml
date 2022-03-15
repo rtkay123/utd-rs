@@ -4,4 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "3.1.6", features = [ "derive" ] }
+clap = { version = "3.1.6", features = [ "derive", "cargo" ] }
+tracing = "0.1.32"
+tracing-subscriber = "0.3.9"
+tracing-appender = "0.2.1"
+
+[target.'cfg(unix)'.dependencies]
+xdg = "2.4.1"
