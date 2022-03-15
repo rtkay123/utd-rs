@@ -1,4 +1,7 @@
 pub mod args;
+mod data;
+pub use data::*;
+use std::path::PathBuf;
 
 pub fn setup_logger(log_level: args::LogLevel) -> tracing_appender::non_blocking::WorkerGuard {
     let file_appender = tracing_appender::rolling::daily(are_you_on_unix(), "utd-log");
@@ -28,13 +31,13 @@ pub fn setup_logger(log_level: args::LogLevel) -> tracing_appender::non_blocking
 
 // This function only gets compiled if the target family is unix
 #[cfg(target_family = "unix")]
-fn are_you_on_unix() -> String {
+pub fn are_you_on_unix() -> PathBuf {
     let xdg_dirs = xdg::BaseDirectories::with_prefix("utd").unwrap();
-    xdg_dirs.get_state_home().to_str().unwrap().to_string()
+    xdg_dirs.get_state_home()
 }
 
 // And this function only gets compiled if the target family is *not* unix
 #[cfg(not(target_family = "unix"))]
-fn are_you_on_unix() -> &'static str {
+pub fn are_you_on_unix() -> &'static str {
     "where does windows store logs even?"
 }
