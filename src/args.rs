@@ -4,19 +4,19 @@ use clap::{ArgEnum, Parser};
 #[clap(author, version, about)]
 pub struct Cli {
     /// Add note(s)
-    #[clap(short, long)]
+    #[clap(short, long, multiple_values = true)]
     pub note: Option<Vec<String>>,
 
     /// Add a new task(s)
-    #[clap(short, long)]
+    #[clap(short, long, multiple_values = true)]
     pub add: Option<Vec<String>>,
 
     /// Check/uncheck task(s) as complete
-    #[clap(short, long)]
+    #[clap(short, long, multiple_values = true)]
     pub check: Option<Vec<String>>,
 
     /// Start/stop task(s)
-    #[clap(short, long)]
+    #[clap(short, long, multiple_values = true)]
     pub begin: Option<Vec<String>>,
 
     /// Sort all tasks and notes
