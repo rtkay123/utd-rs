@@ -35,7 +35,21 @@ fn main() -> Result<()> {
     if args.tidy {
         remove_completed()?;
     }
+    if args.re_set_ids {
+        make_ids_sequential()?;
+    }
 
+    Ok(())
+}
+
+fn make_ids_sequential() -> Result<()> {
+    let tasks = state_file_contents()?;
+    let mut c_tasks = tasks.clone();
+    for (index, _task) in tasks.into_iter().enumerate() {
+        let t = c_tasks.get_mut(index).unwrap();
+        t.id = (index + 1) as i64;
+    }
+    update_file(&c_tasks)?;
     Ok(())
 }
 
@@ -52,6 +66,7 @@ fn remove_completed() -> Result<()> {
         })
         .collect();
     update_file(&tasks)?;
+    Ok(())
 }
 
 enum State {
