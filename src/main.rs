@@ -27,13 +27,21 @@ fn main() -> Result<()> {
         delete_entry(&args.delete.unwrap())?;
     }
     if args.begin.is_some() {
-        start_tasks(&args.begin.unwrap())?;
+        alter_tasks(&args.begin.unwrap(), State::Started)?;
+    }
+    if args.check.is_some() {
+        alter_tasks(&args.check.unwrap(), State::Completed)?;
     }
 
     Ok(())
 }
 
-fn start_tasks(ids: &[String]) -> Result<()> {
+enum State {
+    Started,
+    Completed,
+}
+
+fn alter_tasks(ids: &[String], state: State) -> Result<()> {
     let mut tasks = state_file_contents()?;
     for i in ids.iter() {
         let i: usize = i.parse().unwrap();
@@ -42,8 +50,17 @@ fn start_tasks(ids: &[String]) -> Result<()> {
             .into_iter()
             .map(|mut f| {
                 if f.id as usize == i {
-                    f.in_progress = true;
-                    debug!("starting task {}: {}", i, f.name);
+                    match state {
+                        State::Started => {
+                            f.in_progress = true;
+                            debug!("starting task {}: {}", i, f.name);
+                        }
+                        State::Completed => {
+                            f.in_progress = false;
+                            f.is_done = true;
+                            debug!("completing task {}: {}", i, f.name);
+                        }
+                    }
                 }
                 f
             })
@@ -51,7 +68,7 @@ fn start_tasks(ids: &[String]) -> Result<()> {
         tasks = vals;
     }
     update_file(&tasks)?;
-    debug!("{} tasks started - ok", ids.len());
+    debug!("{} tasks updated - ok", ids.len());
     Ok(())
 }
 
