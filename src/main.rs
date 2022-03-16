@@ -1,4 +1,7 @@
-use ansi_term::Color::{Blue, Green, Yellow};
+use ansi_term::{
+    ANSIGenericString,
+    Color::{Blue, Green, White, Yellow},
+};
 use clap::{lazy_static::lazy_static, StructOpt};
 use rand::Rng;
 use regex::Regex;
@@ -53,7 +56,7 @@ fn main() -> Result<()> {
 }
 
 fn display_content() -> Result<()> {
-    let color = Blue.bold().paint(greeting());
+    let color = White.bold().paint(greeting());
     let tasks = state_file_contents()?;
     let mut table = TableBuilder::new()
         .style(TableStyle::blank())
@@ -63,24 +66,49 @@ fn display_content() -> Result<()> {
             Alignment::Center,
         )])])
         .build();
-    let heading_to_do = Blue.bold().paint("to-do");
-    table.add_row(Row::new(vec![TableCell::new(heading_to_do); 1]));
+    let task_count = tasks.iter().filter(|f| f.is_task).count();
+    let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
+    let heading_to_do = Blue
+        .bold()
+        .underline()
+        .paint(format!("to-do [{}/{}]", completed_count, task_count));
+    table.add_row(Row::new(vec![
+        TableCell::new(draw_heading(heading_to_do));
+        1
+    ]));
     for i in tasks.iter() {
         if i.is_task {
-            let task = format!("{} {}", i.id, &i.name);
+            let task = format!("{}. {}", i.id, &i.name);
             table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done));
+                TableCell::new(draw_entry(task, i.is_done, 4));
                 1
             ]));
         }
     }
-    let heading_to_do = Yellow.bold().paint("notes");
-    table.add_row(Row::new(vec![TableCell::new(heading_to_do); 1]));
+    let heading_to_do = Yellow.bold().underline().paint("notes");
+    table.add_row(Row::new(vec![
+        TableCell::new(draw_heading(heading_to_do));
+        1
+    ]));
     for i in tasks.iter() {
         if !i.is_task {
-            let task = format!("{} {}", i.id, &i.name);
+            let task = format!("{}. {}", i.id, &i.name);
             table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done));
+                TableCell::new(draw_entry(task, i.is_done, 4));
+                1
+            ]));
+        }
+    }
+
+    for (index, i) in tasks.iter().enumerate() {
+        if i.in_progress {
+            if index == 0 {
+                let heading_to_do = Green.bold().underline().paint("in progress");
+                table.add_row(Row::new(vec![TableCell::new(heading_to_do); 1]));
+            }
+            let task = format!("{}. {}", i.id, &i.name);
+            table.add_row(Row::new(vec![
+                TableCell::new(draw_entry(task, i.is_done, 2));
                 1
             ]));
         }
@@ -311,10 +339,18 @@ fn greeting() -> String {
     greetings.get(num).unwrap().to_owned()
 }
 
-fn draw_entry(task: String, completed: bool) -> String {
-    if completed {
-        format!("    {}", Green.strikethrough().paint(task))
-    } else {
-        format!("    {task}")
+fn draw_entry(task: String, completed: bool, indent_spaces: u8) -> String {
+    let mut padding = String::default();
+    for _ in 0..indent_spaces {
+        padding.push(' ');
     }
+    if completed {
+        format!("{padding}{}", Green.strikethrough().dimmed().paint(task))
+    } else {
+        format!("{padding}{task}")
+    }
+}
+
+fn draw_heading(heading: ANSIGenericString<str>) -> String {
+    format!("  {}", heading)
 }
