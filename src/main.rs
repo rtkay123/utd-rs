@@ -168,6 +168,21 @@ fn draw_lists<'a>(
     } else {
         format!("{}{}", config.entry_icon(), value)
     };
+    /***********
+     ***/
+
+    let tag_text = if tags.icon_suffix {
+        if !tag_text.is_empty() {
+            format!("{}{}", tag_text, tags.icon)
+        } else {
+            tag_text.to_owned()
+        }
+    } else if !tag_text.is_empty() {
+        format!("{}{}", tags.icon, tag_text)
+    } else {
+        tag_text.to_owned()
+    };
+    /************************/
     let hex_title = match completed {
         false => match &*priority {
             "low" => hex_to_rgb(config.colour_low()),

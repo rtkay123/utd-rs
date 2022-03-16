@@ -13,7 +13,7 @@ colour = "#689d6a"
 underline = false
 bold = false
 italic = false
-icon = ""
+icon = " " 
 icon-suffix = false
 
 [sections.todo]
