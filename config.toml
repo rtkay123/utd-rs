@@ -1,4 +1,12 @@
-borders = false
+borders = "empty" # elegant, empty or extended
+
+[sections.title]
+underline = false
+bold = false
+italic = false
+icon = ""
+icon-suffix = false
+colour = "#ebdbb2"
 
 [tags]
 colour = "#689d6a"
@@ -7,14 +15,6 @@ bold = false
 italic = false
 icon = ""
 icon-suffix = false
-
-[sections.title]
-underline = false
-bold = false
-italic = false
-icon = ""
-icon-suffix = false
-colour = "#ebdbb2"
 
 [sections.todo]
 indent-spaces = 4

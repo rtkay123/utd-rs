@@ -1,6 +1,6 @@
 use ansi_term::{
     ANSIGenericString,
-    Color::{Blue, Green, White, Yellow},
+    Color::{Blue, Green, Yellow, RGB},
 };
 use clap::{lazy_static::lazy_static, StructOpt};
 use rand::Rng;
@@ -22,7 +22,7 @@ use tracing::{debug, trace};
 use utd::{
     are_you_on_unix,
     args::{PriorityLevel, SortParam},
-    read_config_file, setup_logger, Task, Tasks,
+    read_config_file, setup_logger, Config, Task, Tasks,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     let args = utd::args::Cli::parse();
     // don't drop guard
     let _guard = setup_logger(args.log.unwrap_or(utd::args::LogLevel::Trace));
-    println!("{:#?}", read_config_file());
+    let config = read_config_file()?;
 
     // Adding a new note/task
     if args.note.is_some() || args.add.is_some() {
@@ -52,19 +52,54 @@ fn main() -> Result<()> {
     if args.re_set_ids {
         make_ids_sequential()?;
     }
-    display_content(args.sort.as_ref())?;
+    display_content(&config, args.sort.as_ref())?;
     Ok(())
 }
 
-fn display_content(args: Option<&SortParam>) -> Result<()> {
-    let color = White.bold().paint(greeting());
+fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
+    let title = &config.sections.title;
+    let hex_title = hex_to_rgb(&title.colour);
+    let heading = if title.italic && title.bold && title.underline {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .underline()
+            .bold()
+    } else if title.italic && !title.bold && !title.underline {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic()
+    } else if !title.italic && title.bold && !title.underline {
+        RGB(hex_title.0, hex_title.1, hex_title.2).bold()
+    } else if !title.italic && !title.bold && title.underline {
+        RGB(hex_title.0, hex_title.1, hex_title.2).underline()
+    } else if !title.italic && title.bold && title.underline {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .underline()
+            .bold()
+    } else if title.italic && title.bold && !title.underline {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic().bold()
+    } else if title.italic && !title.bold && title.underline {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .underline()
+    } else {
+        RGB(hex_title.0, hex_title.1, hex_title.2).normal()
+    };
+    let color = heading.paint(if !title.icon_suffix {
+        format!("{}{}", title.icon, greeting())
+    } else {
+        format!("{}{}", greeting(), title.icon)
+    });
     let tasks = if let Some(sort) = args {
         order_tasks(*sort)?
     } else {
         state_file_contents()?
     };
     let mut table = TableBuilder::new()
-        .style(TableStyle::blank())
+        .style(match &*config.borders {
+            "elegant" => TableStyle::extended(),
+            "extended" => TableStyle::elegant(),
+            "empty" => TableStyle::empty(),
+            _ => unreachable!(),
+        })
         .rows(vec![Row::new(vec![TableCell::new_with_alignment(
             color,
             2,
@@ -378,4 +413,11 @@ fn draw_entry(task: String, completed: bool, indent_spaces: u8) -> String {
 
 fn draw_heading(heading: ANSIGenericString<str>) -> String {
     format!("  {}", heading)
+}
+
+fn hex_to_rgb(hex_colour: &str) -> (u8, u8, u8) {
+    let first = u8::from_str_radix(&hex_colour[1..3], 16).unwrap();
+    let second = u8::from_str_radix(&hex_colour[3..5], 16).unwrap();
+    let third = u8::from_str_radix(&hex_colour[5..7], 16).unwrap();
+    (first, second, third)
 }

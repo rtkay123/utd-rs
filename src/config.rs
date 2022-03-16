@@ -7,7 +7,7 @@ use tracing::error;
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    pub borders: bool,
+    pub borders: String,
     pub tags: Tags,
     pub sections: Sections,
 }
@@ -147,35 +147,37 @@ pub struct Notes {
     pub colour_completed: String,
 }
 
-pub fn read_config_file() -> Config {
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub fn read_config_file() -> Result<Config> {
     let op = std::fs::OpenOptions::new()
         .read(true)
         .open(get_config_file_path());
-    let contents = match op {
+    match op {
         Ok(contents) => {
             let mut buf_reader = std::io::BufReader::new(contents);
             let mut contents = String::new();
             match buf_reader.read_to_string(&mut contents) {
-                Ok(_) => contents,
+                Ok(_) => Ok(toml::from_str(&contents)?),
                 Err(e) => {
-                    error!("{}", e);
+                    error!("{}, using default configuration", e);
                     let file = include_bytes!("../config.toml");
-                    String::from_utf8_lossy(file).to_string()
+                    let contents = String::from_utf8_lossy(file);
+                    Ok(toml::from_str(&contents)?)
                 }
             }
         }
         Err(e) => match e.kind() {
             std::io::ErrorKind::NotFound => {
                 let file = include_bytes!("../config.toml");
-                String::from_utf8_lossy(file).to_string()
+                let contents = String::from_utf8_lossy(file);
+                Ok(toml::from_str(&contents)?)
             }
             _ => {
                 error!("{}", e);
-                panic!("{}", e);
+                Err(Box::new(e))
             }
         },
-    };
-    toml::from_str(&contents).unwrap()
+    }
 }
 
 #[cfg(not(target_family = "unix"))]
