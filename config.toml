@@ -17,12 +17,12 @@ icon = ""
 icon-suffix = false
 
 [sections.todo]
-title-colour = "#ebdbb2"
+title-colour = "#458588"
 indent-spaces = 4
-title-bold = false
+title-bold = true
 title-italic = false
 title-underline = true
-title-icon = ""
+title-icon = " "
 title-icon-suffix = false
 entry-icon = ""
 entry-icon-suffix = false

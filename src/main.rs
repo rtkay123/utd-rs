@@ -150,7 +150,7 @@ fn draw_lists<'a>(
     priority: &'a str,
 ) -> String {
     let mut padding = String::default();
-    for _ in 0..config.indent_spaces() {
+    for _ in 0..config.indent_spaces() + 2 {
         padding.push(' ');
     }
 
