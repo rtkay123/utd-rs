@@ -1,3 +1,7 @@
+use ansi_term::Color::{Blue, Green, Yellow};
+use clap::{lazy_static::lazy_static, StructOpt};
+use rand::Rng;
+use regex::Regex;
 use std::{
     collections::VecDeque,
     fs::File,
@@ -6,9 +10,11 @@ use std::{
     path::PathBuf,
     time::{SystemTime, UNIX_EPOCH},
 };
-
-use clap::{lazy_static::lazy_static, StructOpt};
-use regex::Regex;
+use term_table::{
+    row::Row,
+    table_cell::{Alignment, TableCell},
+    TableBuilder, TableStyle,
+};
 use tracing::{debug, trace};
 use utd::{are_you_on_unix, args::PriorityLevel, setup_logger, Task, Tasks};
 
@@ -41,7 +47,46 @@ fn main() -> Result<()> {
     if let Some(sort) = args.sort {
         order_tasks(sort)?;
     }
+    display_content()?;
 
+    Ok(())
+}
+
+fn display_content() -> Result<()> {
+    let color = Blue.bold().paint(greeting());
+    let tasks = state_file_contents()?;
+    let mut table = TableBuilder::new()
+        .style(TableStyle::blank())
+        .rows(vec![Row::new(vec![TableCell::new_with_alignment(
+            color,
+            2,
+            Alignment::Center,
+        )])])
+        .build();
+    let heading_to_do = Blue.bold().paint("to-do");
+    table.add_row(Row::new(vec![TableCell::new(heading_to_do); 1]));
+    for i in tasks.iter() {
+        if i.is_task {
+            let task = format!("{} {}", i.id, &i.name);
+            table.add_row(Row::new(vec![
+                TableCell::new(draw_entry(task, i.is_done));
+                1
+            ]));
+        }
+    }
+    let heading_to_do = Yellow.bold().paint("notes");
+    table.add_row(Row::new(vec![TableCell::new(heading_to_do); 1]));
+    for i in tasks.iter() {
+        if !i.is_task {
+            let task = format!("{} {}", i.id, &i.name);
+            table.add_row(Row::new(vec![
+                TableCell::new(draw_entry(task, i.is_done));
+                1
+            ]));
+        }
+    }
+
+    println!("{}", table.render());
     Ok(())
 }
 
@@ -246,4 +291,30 @@ fn update_file(tasks: &Tasks) -> Result<()> {
     original.push(".utd.json");
     std::fs::rename(path, original)?;
     Ok(())
+}
+
+fn greeting() -> String {
+    let greetings = || -> Vec<String> {
+        vec![
+            "Here's what you have saved",
+            "Here are your tasks",
+            "Let's get things done",
+            "Focus",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect()
+    };
+
+    let greetings = greetings();
+    let num = rand::thread_rng().gen_range(0..greetings.len());
+    greetings.get(num).unwrap().to_owned()
+}
+
+fn draw_entry(task: String, completed: bool) -> String {
+    if completed {
+        format!("    {}", Green.strikethrough().paint(task))
+    } else {
+        format!("    {task}")
+    }
 }
