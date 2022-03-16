@@ -172,35 +172,63 @@ fn draw_lists<'a>(
         _ => unreachable!(),
     };
 
-    let heading = if config.title_italic() && config.title_bold() && completed {
+    let heading = if config.dim_completed() {
+        if config.title_italic() && config.title_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .italic()
+                .strikethrough()
+                .dimmed()
+                .bold()
+        } else if config.entry_italic() && !config.entry_bold() && !completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2).italic()
+        } else if !config.entry_italic() && config.entry_bold() && !completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2).bold()
+        } else if !config.entry_italic() && !config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .strikethrough()
+                .dimmed()
+        } else if !config.entry_italic() && config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .strikethrough()
+                .dimmed()
+                .bold()
+        } else if config.entry_italic() && config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .italic()
+                .bold()
+                .dimmed()
+                .strikethrough()
+        } else if config.entry_italic() && !config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .italic()
+                .dimmed()
+                .strikethrough()
+        } else {
+            RGB(hex_title.0, hex_title.1, hex_title.2).normal()
+        }
+    } else if config.title_italic() && config.title_bold() && completed {
         RGB(hex_title.0, hex_title.1, hex_title.2)
             .italic()
             .strikethrough()
-            .dimmed()
             .bold()
     } else if config.entry_italic() && !config.entry_bold() && !completed {
         RGB(hex_title.0, hex_title.1, hex_title.2).italic()
     } else if !config.entry_italic() && config.entry_bold() && !completed {
         RGB(hex_title.0, hex_title.1, hex_title.2).bold()
     } else if !config.entry_italic() && !config.entry_bold() && completed {
-        RGB(hex_title.0, hex_title.1, hex_title.2)
-            .strikethrough()
-            .dimmed()
+        RGB(hex_title.0, hex_title.1, hex_title.2).strikethrough()
     } else if !config.entry_italic() && config.entry_bold() && completed {
         RGB(hex_title.0, hex_title.1, hex_title.2)
             .strikethrough()
-            .dimmed()
             .bold()
     } else if config.entry_italic() && config.entry_bold() && completed {
         RGB(hex_title.0, hex_title.1, hex_title.2)
             .italic()
             .bold()
-            .dimmed()
             .strikethrough()
     } else if config.entry_italic() && !config.entry_bold() && completed {
         RGB(hex_title.0, hex_title.1, hex_title.2)
             .italic()
-            .dimmed()
             .strikethrough()
     } else {
         RGB(hex_title.0, hex_title.1, hex_title.2).normal()
