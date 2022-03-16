@@ -1,7 +1,4 @@
-use ansi_term::{
-    ANSIGenericString,
-    Color::{Green, Yellow, RGB},
-};
+use ansi_term::{ANSIGenericString, Color::RGB};
 use clap::{lazy_static::lazy_static, StructOpt};
 use rand::Rng;
 use regex::Regex;
@@ -546,26 +543,6 @@ fn greeting() -> String {
     let greetings = greetings();
     let num = rand::thread_rng().gen_range(0..greetings.len());
     greetings.get(num).unwrap().to_owned()
-}
-
-fn draw_entry(task: String, completed: bool, indent_spaces: u8) -> String {
-    let mut padding = String::default();
-    for _ in 0..indent_spaces {
-        padding.push(' ');
-    }
-    if completed {
-        format!(
-            "{padding} {} {}",
-            Green.paint("✓"),
-            Green.strikethrough().dimmed().paint(task)
-        )
-    } else {
-        format!("{padding}{task}")
-    }
-}
-
-fn draw_heading(heading: ANSIGenericString<str>) -> String {
-    format!("  {}", heading)
 }
 
 fn hex_to_rgb(hex_colour: &str) -> (u8, u8, u8) {
