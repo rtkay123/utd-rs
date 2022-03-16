@@ -38,7 +38,23 @@ fn main() -> Result<()> {
     if args.re_set_ids {
         make_ids_sequential()?;
     }
+    if let Some(sort) = args.sort {
+        order_tasks(sort)?;
+    }
 
+    Ok(())
+}
+
+fn order_tasks(sort: utd::args::SortParam) -> Result<()> {
+    let mut tasks = state_file_contents()?;
+    match sort {
+        utd::args::SortParam::Age => tasks.sort_unstable_by_key(|f| f.timestamp()),
+        utd::args::SortParam::Priority => {
+            tasks.sort_unstable_by_key(|f| f.priority_score());
+            tasks.reverse();
+        }
+    }
+    println!("{:#?}", tasks);
     Ok(())
 }
 

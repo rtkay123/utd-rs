@@ -4,7 +4,7 @@ use crate::args::PriorityLevel;
 
 pub type Tasks = Vec<Task>;
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Task {
     pub id: i64,
@@ -39,5 +39,17 @@ impl Task {
             in_progress: false,
             priority: priority.to_string(),
         }
+    }
+    pub fn priority_score(&self) -> u8 {
+        match self.priority.as_str() {
+            "normal" => 1,
+            "low" => 0,
+            "high" => 2,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn timestamp(&self) -> u128 {
+        self.timestamp.parse().unwrap()
     }
 }
