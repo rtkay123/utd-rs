@@ -106,7 +106,9 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
         }
     }
 
-    println!("{}", table.render());
+    if !tasks.is_empty() {
+        println!("{}", table.render());
+    }
     Ok(())
 }
 
@@ -578,8 +580,8 @@ fn update_file(tasks: &Tasks) -> Result<()> {
 fn greeting() -> String {
     let greetings = || -> Vec<String> {
         vec![
-            "Here's what you have saved",
-            "Here are your tasks",
+            "Here's is your board",
+            "Remember...",
             "Let's get things done",
             "Focus",
         ]
