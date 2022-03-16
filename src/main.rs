@@ -19,7 +19,7 @@ use tracing::{debug, trace};
 use utd::{
     are_you_on_unix,
     args::{PriorityLevel, SortParam},
-    read_config_file, setup_logger, Config, Configurable, Task, Tasks,
+    read_config_file, setup_logger, Config, Configurable, Tags, Task, Tasks,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -117,6 +117,7 @@ fn draw_progress_list(config: &Config, task: &Task, table: &mut Table) {
         task.is_done,
         task_title,
         &task.priority,
+        (&task.tags, &config.tags),
     );
     table.add_row(Row::new(vec![TableCell::new(res); 1]));
 }
@@ -128,6 +129,7 @@ fn draw_notes_list(config: &Config, task: &Task, table: &mut Table) {
         task.is_done,
         task_title,
         &task.priority,
+        (&task.tags, &config.tags),
     );
     table.add_row(Row::new(vec![TableCell::new(res); 1]));
 }
@@ -138,6 +140,7 @@ fn draw_todo_list(config: &Config, task: &Task, table: &mut Table) {
         task.is_done,
         task_title,
         &task.priority,
+        (&task.tags, &config.tags),
     );
     table.add_row(Row::new(vec![TableCell::new(res); 1]));
 }
@@ -147,12 +150,13 @@ fn draw_lists<'a>(
     completed: bool,
     value: String,
     priority: &'a str,
+    tags: (&str, &Tags),
 ) -> String {
+    let (tag_text, tags) = tags;
     let mut padding = String::default();
     for _ in 0..config.indent_spaces() + 2 {
         padding.push(' ');
     }
-
     let value = if config.entry_icon_suffix() {
         if completed {
             format!("{}{}", value, config.completed_icon())
@@ -175,7 +179,7 @@ fn draw_lists<'a>(
     };
 
     let heading = if config.dim_completed() {
-        if config.title_italic() && config.title_bold() && completed {
+        if config.entry_italic() && config.entry_bold() && completed {
             RGB(hex_title.0, hex_title.1, hex_title.2)
                 .italic()
                 .strikethrough()
@@ -208,7 +212,7 @@ fn draw_lists<'a>(
         } else {
             RGB(hex_title.0, hex_title.1, hex_title.2).normal()
         }
-    } else if config.title_italic() && config.title_bold() && completed {
+    } else if config.entry_italic() && config.entry_bold() && completed {
         RGB(hex_title.0, hex_title.1, hex_title.2)
             .italic()
             .strikethrough()
@@ -236,7 +240,36 @@ fn draw_lists<'a>(
         RGB(hex_title.0, hex_title.1, hex_title.2).normal()
     };
     let vals = heading.paint(value);
-    format!("{padding}{vals}")
+    let res = format!("{padding}{vals}");
+    let hex_title_tag = hex_to_rgb(&tags.colour);
+    let tag = if tags.italic && tags.bold && tags.underline {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
+            .italic()
+            .underline()
+            .bold()
+    } else if tags.italic && !tags.bold && !tags.underline {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).italic()
+    } else if !tags.italic && tags.bold && !tags.underline {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).bold()
+    } else if !tags.italic && !tags.bold && tags.underline {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).underline()
+    } else if !tags.italic && tags.bold && tags.underline {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
+            .underline()
+            .bold()
+    } else if tags.italic && tags.bold && !tags.underline {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
+            .italic()
+            .bold()
+    } else if tags.italic && !tags.bold && tags.underline {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
+            .italic()
+            .underline()
+    } else {
+        RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).normal()
+    };
+    let other = tag.paint(tag_text);
+    format!("{res} {other}")
 }
 
 fn draw_titles(title: &impl Configurable, value: impl AsRef<str>) -> ANSIGenericString<str> {
