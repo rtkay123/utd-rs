@@ -1,0 +1,66 @@
+borders = false
+
+[tags]
+colour = "#689d6a"
+underline = false
+bold = false
+italic = false
+icon = ""
+icon-suffix = false
+
+[sections.title]
+underline = false
+bold = false
+italic = false
+icon = ""
+icon-suffix = false
+colour = "#ebdbb2"
+
+[sections.todo]
+indent-spaces = 4
+title-bold = false
+title-italic = false
+title-underline = true
+title-icon = ""
+title-icon-suffix = false
+entry-icon = ""
+entry-icon-suffix = false
+entry-bold = false
+entry-italic = false
+dim-completed = true
+colour-low = "#458588"
+colour-normal = "#d65d0e"
+colour-high = "#cc241d"
+colour-completed = "#98971a"
+
+[sections.in-progress]
+indent-spaces = 6
+title-bold = false
+title-italic = false
+title-underline = false
+title-icon = ""
+title-icon-suffix = false
+entry-icon = ""
+entry-icon-suffix = false
+entry-bold = false
+entry-italic = false
+colour-low = "#458588"
+colour-normal = "#d65d0e"
+colour-high = "#cc241d"
+
+[sections.notes]
+indent-spaces = 4
+title-bold = false
+title-italic = false
+title-underline = false
+title-icon = ""
+title-icon-suffix = false
+entry-icon = ""
+entry-icon-suffix = false
+entry-bold = false
+entry-italic = false
+dim-noted = true
+colour-low = "#458588"
+colour-normal = "#d65d0e"
+colour-high = "#cc241d"
+colour-completed = "#98971a"

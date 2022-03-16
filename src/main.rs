@@ -52,7 +52,6 @@ fn main() -> Result<()> {
         make_ids_sequential()?;
     }
     display_content(args.sort.as_ref())?;
-
     Ok(())
 }
 
@@ -366,7 +365,11 @@ fn draw_entry(task: String, completed: bool, indent_spaces: u8) -> String {
         padding.push(' ');
     }
     if completed {
-        format!("{padding}{}", Green.strikethrough().dimmed().paint(task))
+        format!(
+            "{padding} {} {}",
+            Green.paint("✓"),
+            Green.strikethrough().dimmed().paint(task)
+        )
     } else {
         format!("{padding}{task}")
     }
