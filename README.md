@@ -13,7 +13,7 @@
 </div>
 
 <h2 align="center">Demo</h2>
-<a href="https://asciinema.org/a/71Gtt0yWETb4nCGJdJ7bc1DNF?speed=2"><img src="https://asciinema.org/a/71Gtt0yWETb4nCGJdJ7bc1DNF.png" width="836"/></a>
+<a href="https://asciinema.org/a/71Gtt0yWETb4nCGJdJ7bc1DNF?speed=2&autoplay=1"><img src="https://asciinema.org/a/71Gtt0yWETb4nCGJdJ7bc1DNF.png" width="836"/></a>
 
 ## Installation
 
