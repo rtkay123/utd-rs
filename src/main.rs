@@ -19,7 +19,11 @@ use term_table::{
     TableBuilder, TableStyle,
 };
 use tracing::{debug, trace};
-use utd::{are_you_on_unix, args::PriorityLevel, setup_logger, Task, Tasks};
+use utd::{
+    are_you_on_unix,
+    args::{PriorityLevel, SortParam},
+    setup_logger, Task, Tasks,
+};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -47,17 +51,18 @@ fn main() -> Result<()> {
     if args.re_set_ids {
         make_ids_sequential()?;
     }
-    if let Some(sort) = args.sort {
-        order_tasks(sort)?;
-    }
-    display_content()?;
+    display_content(args.sort.as_ref())?;
 
     Ok(())
 }
 
-fn display_content() -> Result<()> {
+fn display_content(args: Option<&SortParam>) -> Result<()> {
     let color = White.bold().paint(greeting());
-    let tasks = state_file_contents()?;
+    let tasks = if let Some(sort) = args {
+        order_tasks(*sort)?
+    } else {
+        state_file_contents()?
+    };
     let mut table = TableBuilder::new()
         .style(TableStyle::blank())
         .rows(vec![Row::new(vec![TableCell::new_with_alignment(
@@ -66,8 +71,14 @@ fn display_content() -> Result<()> {
             Alignment::Center,
         )])])
         .build();
-    for (index, i) in tasks.iter().enumerate() {
-        if i.is_task {
+    let set_tasks: Vec<_> = tasks
+        .iter()
+        .filter(|f| f.is_task && !f.in_progress)
+        .collect();
+    let in_progress: Vec<_> = tasks.iter().filter(|f| f.in_progress).collect();
+    let notes: Vec<_> = tasks.iter().filter(|f| !f.is_task).collect();
+    for (index, i) in set_tasks.iter().enumerate() {
+        if i.is_task && !i.in_progress {
             if index == 0 {
                 let task_count = tasks.iter().filter(|f| f.is_task).count();
                 let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
@@ -87,7 +98,28 @@ fn display_content() -> Result<()> {
             ]));
         }
     }
-    for (index, i) in tasks.iter().enumerate() {
+
+    for (index, i) in in_progress.iter().enumerate() {
+        if i.in_progress {
+            if index == 0 {
+                let heading_to_do = Green.bold().underline().paint("in progress");
+                table.add_row(Row::new(vec![
+                    TableCell::new(format!(
+                        "      {}",
+                        heading_to_do
+                    ));
+                    1
+                ]));
+            }
+            let task = format!("{}. {}", i.id, &i.name);
+            table.add_row(Row::new(vec![
+                TableCell::new(draw_entry(task, i.is_done, 6));
+                1
+            ]));
+        }
+    }
+
+    for (index, i) in notes.iter().enumerate() {
         if !i.is_task {
             if index == 0 {
                 let heading_to_do = Yellow.bold().underline().paint("notes");
@@ -104,25 +136,11 @@ fn display_content() -> Result<()> {
         }
     }
 
-    for (index, i) in tasks.iter().enumerate() {
-        if i.in_progress {
-            if index == 0 {
-                let heading_to_do = Green.bold().underline().paint("in progress");
-                table.add_row(Row::new(vec![TableCell::new(heading_to_do); 1]));
-            }
-            let task = format!("{}. {}", i.id, &i.name);
-            table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done, 2));
-                1
-            ]));
-        }
-    }
-
     println!("{}", table.render());
     Ok(())
 }
 
-fn order_tasks(sort: utd::args::SortParam) -> Result<()> {
+fn order_tasks(sort: utd::args::SortParam) -> Result<Tasks> {
     let mut tasks = state_file_contents()?;
     match sort {
         utd::args::SortParam::Age => tasks.sort_unstable_by_key(|f| f.timestamp()),
@@ -131,8 +149,7 @@ fn order_tasks(sort: utd::args::SortParam) -> Result<()> {
             tasks.reverse();
         }
     }
-    println!("{:#?}", tasks);
-    Ok(())
+    Ok(tasks)
 }
 
 fn make_ids_sequential() -> Result<()> {
