@@ -165,11 +165,14 @@ fn draw_lists<'a>(
     } else {
         format!("{}{}", config.entry_icon(), value)
     };
-    let hex_title = match &*priority {
-        "low" => hex_to_rgb(config.colour_low()),
-        "normal" => hex_to_rgb(config.colour_normal()),
-        "high" => hex_to_rgb(config.colour_high()),
-        _ => unreachable!(),
+    let hex_title = match completed {
+        false => match &*priority {
+            "low" => hex_to_rgb(config.colour_low()),
+            "normal" => hex_to_rgb(config.colour_normal()),
+            "high" => hex_to_rgb(config.colour_high()),
+            _ => unreachable!(),
+        },
+        true => hex_to_rgb(config.colour_completed()),
     };
 
     let heading = if config.dim_completed() {

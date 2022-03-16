@@ -107,6 +107,10 @@ impl Configurable for Title {
     fn colour_high(&self) -> &str {
         unimplemented!()
     }
+
+    fn colour_completed(&self) -> &str {
+        unimplemented!()
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -163,6 +167,7 @@ pub trait Configurable {
     fn colour_low(&self) -> &str;
     fn colour_normal(&self) -> &str;
     fn colour_high(&self) -> &str;
+    fn colour_completed(&self) -> &str;
     fn title_colour(&self) -> &str;
     fn completed_icon(&self) -> &str;
 }
@@ -228,6 +233,10 @@ impl Configurable for Todo {
     }
     fn completed_icon(&self) -> &str {
         &self.completed_icon
+    }
+
+    fn colour_completed(&self) -> &str {
+        &self.colour_completed
     }
 }
 
@@ -304,6 +313,9 @@ impl Configurable for InProgress {
         &self.title_icon
     }
 
+    fn colour_completed(&self) -> &str {
+        unimplemented!()
+    }
     fn entry_icon(&self) -> &str {
         &self.entry_icon
     }
@@ -385,7 +397,9 @@ impl Configurable for Notes {
     fn title_underline(&self) -> bool {
         self.title_underline
     }
-
+    fn colour_completed(&self) -> &str {
+        &self.colour_completed
+    }
     fn title_icon_suffix(&self) -> bool {
         self.title_icon_suffix
     }
