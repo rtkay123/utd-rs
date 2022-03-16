@@ -1,6 +1,6 @@
 use ansi_term::{
     ANSIGenericString,
-    Color::{Blue, Green, Yellow, RGB},
+    Color::{Green, Yellow, RGB},
 };
 use clap::{lazy_static::lazy_static, StructOpt};
 use rand::Rng;
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
 }
 
 fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
-    let title_message = draw_top_title(&config.sections.title, &greeting());
+    let title_message = draw_titles(&config.sections.title, &greeting());
     let tasks = if let Some(sort) = args {
         order_tasks(*sort)?
     } else {
@@ -87,11 +87,7 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
             if index == 0 {
                 draw_todo_title(config, &tasks, &mut table);
             }
-            let task = format!("{}. {}", i.id, &i.name);
-            table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done, 4));
-                1
-            ]));
+            draw_todo_list(config, i, &mut table);
         }
     }
 
@@ -136,7 +132,95 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
     Ok(())
 }
 
-fn draw_top_title(title: &impl Configurable, value: impl AsRef<str>) -> ANSIGenericString<str> {
+fn draw_todo_list(config: &Config, task: &Task, table: &mut Table) {
+    let task_title = format!("{}. {}", task.id, &task.name);
+    let res = draw_lists(
+        &config.sections.todo,
+        task.is_done,
+        task_title,
+        &task.priority,
+    );
+    table.add_row(Row::new(vec![TableCell::new(res); 1]));
+}
+
+fn draw_lists<'a>(
+    config: &'a impl Configurable,
+    completed: bool,
+    value: String,
+    priority: &'a str,
+) -> String {
+    let mut padding = String::default();
+    for _ in 0..config.indent_spaces() {
+        padding.push(' ');
+    }
+
+    let value = if config.entry_icon_suffix() {
+        if completed {
+            format!("{}{}", value, config.completed_icon())
+        } else {
+            format!("{}{}", value, config.entry_icon())
+        }
+    } else if completed {
+        format!("{}{}", config.completed_icon(), value)
+    } else {
+        format!("{}{}", config.entry_icon(), value)
+    };
+    let hex_title = match &*priority {
+        "low" => hex_to_rgb(config.colour_low()),
+        "normal" => hex_to_rgb(config.colour_normal()),
+        "high" => hex_to_rgb(config.colour_high()),
+        _ => unreachable!(),
+    };
+
+    let heading = if config.title_italic() && config.title_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .strikethrough()
+            .dimmed()
+            .bold()
+    } else if config.entry_italic() && !config.entry_bold() && !completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic()
+    } else if !config.entry_italic() && config.entry_bold() && !completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2).bold()
+    } else if !config.entry_italic() && !config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .strikethrough()
+            .dimmed()
+    } else if !config.entry_italic() && config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .strikethrough()
+            .dimmed()
+            .bold()
+    } else if config.entry_italic() && config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .bold()
+            .dimmed()
+            .strikethrough()
+    } else if config.entry_italic() && !config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .dimmed()
+            .strikethrough()
+    } else {
+        RGB(hex_title.0, hex_title.1, hex_title.2).normal()
+    };
+    let vals = heading.paint(value);
+    format!("{padding}{vals}")
+    /*
+    if completed {
+        format!(
+            "{padding} {} {}",
+            Green.paint("✓"),
+            Green.strikethrough().dimmed().paint(task)
+        )
+    } else {
+        format!("{padding}{task}")
+    }*/
+    //todo!()
+}
+
+fn draw_titles(title: &impl Configurable, value: impl AsRef<str>) -> ANSIGenericString<str> {
     let hex_title = hex_to_rgb(title.title_colour());
     let heading = if title.title_italic() && title.title_bold() && title.title_underline() {
         RGB(hex_title.0, hex_title.1, hex_title.2)
@@ -173,7 +257,7 @@ fn draw_todo_title(config: &Config, tasks: &Tasks, table: &mut Table) {
     let task_count = tasks.iter().filter(|f| f.is_task).count();
     let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
     let heading_to_do = format!("to-do [{}/{}]", completed_count, task_count);
-    let heading_to_do = draw_top_title(&config.sections.todo, &heading_to_do);
+    let heading_to_do = draw_titles(&config.sections.todo, &heading_to_do);
     let heading = config.sections.todo.indent_spaces();
     let mut padding = String::default();
     for _ in 0..heading {

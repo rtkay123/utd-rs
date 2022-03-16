@@ -33,6 +33,7 @@ colour-low = "#458588"
 colour-normal = "#d65d0e"
 colour-high = "#cc241d"
 colour-completed = "#98971a"
+completed-icon = "✓ "
 
 [sections.in-progress]
 title-colour = "#ebdbb2"
@@ -67,3 +68,4 @@ colour-low = "#458588"
 colour-normal = "#d65d0e"
 colour-high = "#cc241d"
 colour-completed = "#98971a"
+completed-icon = ""

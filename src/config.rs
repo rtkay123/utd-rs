@@ -101,6 +101,9 @@ impl Configurable for Title {
         unimplemented!()
     }
 
+    fn completed_icon(&self) -> &str {
+        unimplemented!()
+    }
     fn colour_high(&self) -> &str {
         unimplemented!()
     }
@@ -141,6 +144,8 @@ pub struct Todo {
     pub colour_high: String,
     #[serde(rename = "colour-completed")]
     pub colour_completed: String,
+    #[serde(rename = "completed-icon")]
+    pub completed_icon: String,
 }
 
 pub trait Configurable {
@@ -159,6 +164,7 @@ pub trait Configurable {
     fn colour_normal(&self) -> &str;
     fn colour_high(&self) -> &str;
     fn title_colour(&self) -> &str;
+    fn completed_icon(&self) -> &str;
 }
 
 impl Configurable for Todo {
@@ -219,6 +225,9 @@ impl Configurable for Todo {
 
     fn colour_high(&self) -> &str {
         &self.colour_high
+    }
+    fn completed_icon(&self) -> &str {
+        &self.completed_icon
     }
 }
 
@@ -313,6 +322,9 @@ impl Configurable for InProgress {
     fn title_colour(&self) -> &str {
         &self.title_colour
     }
+    fn completed_icon(&self) -> &str {
+        unimplemented!()
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -350,6 +362,8 @@ pub struct Notes {
     pub colour_high: String,
     #[serde(rename = "colour-completed")]
     pub colour_completed: String,
+    #[serde(rename = "completed-icon")]
+    pub completed_icon: String,
 }
 
 impl Configurable for Notes {
@@ -388,6 +402,9 @@ impl Configurable for Notes {
         self.entry_italic
     }
 
+    fn completed_icon(&self) -> &str {
+        &self.completed_icon
+    }
     fn dim_completed(&self) -> bool {
         self.dim_noted
     }
