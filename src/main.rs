@@ -16,13 +16,13 @@ use std::{
 use term_table::{
     row::Row,
     table_cell::{Alignment, TableCell},
-    TableBuilder, TableStyle,
+    Table, TableBuilder, TableStyle,
 };
 use tracing::{debug, trace};
 use utd::{
     are_you_on_unix,
     args::{PriorityLevel, SortParam},
-    read_config_file, setup_logger, Config, Task, Tasks,
+    read_config_file, setup_logger, Config, Configurable, Task, Tasks,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -57,37 +57,7 @@ fn main() -> Result<()> {
 }
 
 fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
-    let title = &config.sections.title;
-    let hex_title = hex_to_rgb(&title.colour);
-    let heading = if title.italic && title.bold && title.underline {
-        RGB(hex_title.0, hex_title.1, hex_title.2)
-            .italic()
-            .underline()
-            .bold()
-    } else if title.italic && !title.bold && !title.underline {
-        RGB(hex_title.0, hex_title.1, hex_title.2).italic()
-    } else if !title.italic && title.bold && !title.underline {
-        RGB(hex_title.0, hex_title.1, hex_title.2).bold()
-    } else if !title.italic && !title.bold && title.underline {
-        RGB(hex_title.0, hex_title.1, hex_title.2).underline()
-    } else if !title.italic && title.bold && title.underline {
-        RGB(hex_title.0, hex_title.1, hex_title.2)
-            .underline()
-            .bold()
-    } else if title.italic && title.bold && !title.underline {
-        RGB(hex_title.0, hex_title.1, hex_title.2).italic().bold()
-    } else if title.italic && !title.bold && title.underline {
-        RGB(hex_title.0, hex_title.1, hex_title.2)
-            .italic()
-            .underline()
-    } else {
-        RGB(hex_title.0, hex_title.1, hex_title.2).normal()
-    };
-    let color = heading.paint(if !title.icon_suffix {
-        format!("{}{}", title.icon, greeting())
-    } else {
-        format!("{}{}", greeting(), title.icon)
-    });
+    let title_message = draw_top_title(&config.sections.title, &greeting());
     let tasks = if let Some(sort) = args {
         order_tasks(*sort)?
     } else {
@@ -101,7 +71,7 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
             _ => unreachable!(),
         })
         .rows(vec![Row::new(vec![TableCell::new_with_alignment(
-            color,
+            title_message,
             2,
             Alignment::Center,
         )])])
@@ -115,16 +85,7 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
     for (index, i) in set_tasks.iter().enumerate() {
         if i.is_task && !i.in_progress {
             if index == 0 {
-                let task_count = tasks.iter().filter(|f| f.is_task).count();
-                let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
-                let heading_to_do = Blue
-                    .bold()
-                    .underline()
-                    .paint(format!("to-do [{}/{}]", completed_count, task_count));
-                table.add_row(Row::new(vec![
-                    TableCell::new(draw_heading(heading_to_do));
-                    1
-                ]));
+                draw_todo_title(config, &tasks, &mut table);
             }
             let task = format!("{}. {}", i.id, &i.name);
             table.add_row(Row::new(vec![
@@ -173,6 +134,58 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
 
     println!("{}", table.render());
     Ok(())
+}
+
+fn draw_top_title(title: &impl Configurable, value: impl AsRef<str>) -> ANSIGenericString<str> {
+    let hex_title = hex_to_rgb(title.title_colour());
+    let heading = if title.title_italic() && title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .underline()
+            .bold()
+    } else if title.title_italic() && !title.title_bold() && !title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic()
+    } else if !title.title_italic() && title.title_bold() && !title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).bold()
+    } else if !title.title_italic() && !title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).underline()
+    } else if !title.title_italic() && title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .underline()
+            .bold()
+    } else if title.title_italic() && title.title_bold() && !title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic().bold()
+    } else if title.title_italic() && !title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .underline()
+    } else {
+        RGB(hex_title.0, hex_title.1, hex_title.2).normal()
+    };
+    heading.paint(if !title.title_icon_suffix() {
+        format!("{}{}", title.title_icon(), value.as_ref())
+    } else {
+        format!("{}{}", value.as_ref(), title.title_icon())
+    })
+}
+
+fn draw_todo_title(config: &Config, tasks: &Tasks, table: &mut Table) {
+    let task_count = tasks.iter().filter(|f| f.is_task).count();
+    let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
+    let heading_to_do = format!("to-do [{}/{}]", completed_count, task_count);
+    let heading_to_do = draw_top_title(&config.sections.todo, &heading_to_do);
+    let heading = config.sections.todo.indent_spaces();
+    let mut padding = String::default();
+    for _ in 0..heading {
+        padding.push(' ')
+    }
+    table.add_row(Row::new(vec![
+        TableCell::new(format!(
+            "{}{}",
+            padding, heading_to_do
+        ));
+        1
+    ]));
 }
 
 fn order_tasks(sort: utd::args::SortParam) -> Result<Tasks> {

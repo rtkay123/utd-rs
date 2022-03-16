@@ -4,7 +4,7 @@ borders = "empty" # elegant, empty or extended
 underline = false
 bold = false
 italic = false
-icon = ""
+icon = " "
 icon-suffix = false
 colour = "#ebdbb2"
 
@@ -17,6 +17,7 @@ icon = ""
 icon-suffix = false
 
 [sections.todo]
+title-colour = "#ebdbb2"
 indent-spaces = 4
 title-bold = false
 title-italic = false
@@ -34,6 +35,7 @@ colour-high = "#cc241d"
 colour-completed = "#98971a"
 
 [sections.in-progress]
+title-colour = "#ebdbb2"
 indent-spaces = 6
 title-bold = false
 title-italic = false
@@ -49,6 +51,7 @@ colour-normal = "#d65d0e"
 colour-high = "#cc241d"
 
 [sections.notes]
+title-colour = "#ebdbb2"
 indent-spaces = 4
 title-bold = false
 title-italic = false

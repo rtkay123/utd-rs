@@ -45,10 +45,72 @@ pub struct Title {
     pub icon_suffix: bool,
     pub colour: String,
 }
+impl Configurable for Title {
+    fn title_colour(&self) -> &str {
+        &self.colour
+    }
+    fn indent_spaces(&self) -> u8 {
+        unimplemented!()
+    }
+
+    fn title_bold(&self) -> bool {
+        self.bold
+    }
+
+    fn title_italic(&self) -> bool {
+        self.italic
+    }
+
+    fn title_underline(&self) -> bool {
+        self.underline
+    }
+
+    fn title_icon_suffix(&self) -> bool {
+        self.icon_suffix
+    }
+
+    fn entry_icon_suffix(&self) -> bool {
+        unimplemented!()
+    }
+
+    fn entry_bold(&self) -> bool {
+        unimplemented!()
+    }
+
+    fn entry_italic(&self) -> bool {
+        unimplemented!()
+    }
+
+    fn dim_completed(&self) -> bool {
+        unimplemented!()
+    }
+
+    fn title_icon(&self) -> &str {
+        &self.icon
+    }
+
+    fn entry_icon(&self) -> &str {
+        unimplemented!()
+    }
+
+    fn colour_low(&self) -> &str {
+        unimplemented!()
+    }
+
+    fn colour_normal(&self) -> &str {
+        unimplemented!()
+    }
+
+    fn colour_high(&self) -> &str {
+        unimplemented!()
+    }
+}
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Todo {
+    #[serde(rename = "title-colour")]
+    pub title_colour: String,
     #[serde(rename = "indent-spaces")]
     pub indent_spaces: i64,
     #[serde(rename = "title-bold")]
@@ -81,9 +143,90 @@ pub struct Todo {
     pub colour_completed: String,
 }
 
+pub trait Configurable {
+    fn indent_spaces(&self) -> u8;
+    fn title_bold(&self) -> bool;
+    fn title_italic(&self) -> bool;
+    fn title_underline(&self) -> bool;
+    fn title_icon_suffix(&self) -> bool;
+    fn entry_icon_suffix(&self) -> bool;
+    fn entry_bold(&self) -> bool;
+    fn entry_italic(&self) -> bool;
+    fn dim_completed(&self) -> bool;
+    fn title_icon(&self) -> &str;
+    fn entry_icon(&self) -> &str;
+    fn colour_low(&self) -> &str;
+    fn colour_normal(&self) -> &str;
+    fn colour_high(&self) -> &str;
+    fn title_colour(&self) -> &str;
+}
+
+impl Configurable for Todo {
+    fn title_colour(&self) -> &str {
+        &self.title_colour
+    }
+    fn indent_spaces(&self) -> u8 {
+        self.indent_spaces as u8
+    }
+
+    fn title_bold(&self) -> bool {
+        self.title_bold
+    }
+
+    fn title_italic(&self) -> bool {
+        self.title_italic
+    }
+
+    fn title_underline(&self) -> bool {
+        self.title_underline
+    }
+
+    fn title_icon_suffix(&self) -> bool {
+        self.title_icon_suffix
+    }
+
+    fn entry_icon_suffix(&self) -> bool {
+        self.entry_icon_suffix
+    }
+
+    fn entry_bold(&self) -> bool {
+        self.entry_bold
+    }
+
+    fn entry_italic(&self) -> bool {
+        self.entry_italic
+    }
+
+    fn dim_completed(&self) -> bool {
+        self.dim_completed
+    }
+
+    fn title_icon(&self) -> &str {
+        &self.title_icon
+    }
+
+    fn entry_icon(&self) -> &str {
+        &self.entry_icon
+    }
+
+    fn colour_low(&self) -> &str {
+        &self.colour_low
+    }
+
+    fn colour_normal(&self) -> &str {
+        &self.colour_normal
+    }
+
+    fn colour_high(&self) -> &str {
+        &self.colour_high
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InProgress {
+    #[serde(rename = "title-colour")]
+    pub title_colour: String,
     #[serde(rename = "indent-spaces")]
     pub indent_spaces: i64,
     #[serde(rename = "title-bold")]
@@ -111,10 +254,72 @@ pub struct InProgress {
     #[serde(rename = "colour-high")]
     pub colour_high: String,
 }
+impl Configurable for InProgress {
+    fn indent_spaces(&self) -> u8 {
+        self.indent_spaces as u8
+    }
+
+    fn title_bold(&self) -> bool {
+        self.title_bold
+    }
+
+    fn title_italic(&self) -> bool {
+        self.title_italic
+    }
+
+    fn title_underline(&self) -> bool {
+        self.title_underline
+    }
+
+    fn title_icon_suffix(&self) -> bool {
+        self.title_icon_suffix
+    }
+
+    fn entry_icon_suffix(&self) -> bool {
+        self.entry_icon_suffix
+    }
+
+    fn entry_bold(&self) -> bool {
+        self.entry_bold
+    }
+
+    fn entry_italic(&self) -> bool {
+        self.entry_italic
+    }
+
+    fn dim_completed(&self) -> bool {
+        todo!()
+    }
+
+    fn title_icon(&self) -> &str {
+        &self.title_icon
+    }
+
+    fn entry_icon(&self) -> &str {
+        &self.entry_icon
+    }
+
+    fn colour_low(&self) -> &str {
+        &self.colour_low
+    }
+
+    fn colour_normal(&self) -> &str {
+        &self.colour_normal
+    }
+
+    fn colour_high(&self) -> &str {
+        &self.colour_high
+    }
+    fn title_colour(&self) -> &str {
+        &self.title_colour
+    }
+}
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Notes {
+    #[serde(rename = "title-colour")]
+    pub title_colour: String,
     #[serde(rename = "indent-spaces")]
     pub indent_spaces: i64,
     #[serde(rename = "title-bold")]
@@ -147,6 +352,66 @@ pub struct Notes {
     pub colour_completed: String,
 }
 
+impl Configurable for Notes {
+    fn title_colour(&self) -> &str {
+        &self.title_colour
+    }
+    fn indent_spaces(&self) -> u8 {
+        self.indent_spaces as u8
+    }
+
+    fn title_bold(&self) -> bool {
+        self.title_bold
+    }
+
+    fn title_italic(&self) -> bool {
+        self.title_italic
+    }
+
+    fn title_underline(&self) -> bool {
+        self.title_underline
+    }
+
+    fn title_icon_suffix(&self) -> bool {
+        self.title_icon_suffix
+    }
+
+    fn entry_icon_suffix(&self) -> bool {
+        self.entry_icon_suffix
+    }
+
+    fn entry_bold(&self) -> bool {
+        self.entry_bold
+    }
+
+    fn entry_italic(&self) -> bool {
+        self.entry_italic
+    }
+
+    fn dim_completed(&self) -> bool {
+        self.dim_noted
+    }
+
+    fn title_icon(&self) -> &str {
+        &self.title_icon
+    }
+
+    fn entry_icon(&self) -> &str {
+        &self.entry_icon
+    }
+
+    fn colour_low(&self) -> &str {
+        &self.colour_low
+    }
+
+    fn colour_normal(&self) -> &str {
+        &self.colour_normal
+    }
+
+    fn colour_high(&self) -> &str {
+        &self.colour_high
+    }
+}
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 pub fn read_config_file() -> Result<Config> {
     let op = std::fs::OpenOptions::new()
