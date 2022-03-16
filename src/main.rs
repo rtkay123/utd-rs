@@ -1,6 +1,6 @@
 use ansi_term::{
     ANSIGenericString,
-    Color::{Blue, Green, White, Yellow},
+    Color::{Green, Yellow, RGB},
 };
 use clap::{lazy_static::lazy_static, StructOpt};
 use rand::Rng;
@@ -16,13 +16,13 @@ use std::{
 use term_table::{
     row::Row,
     table_cell::{Alignment, TableCell},
-    TableBuilder, TableStyle,
+    Table, TableBuilder, TableStyle,
 };
 use tracing::{debug, trace};
 use utd::{
     are_you_on_unix,
     args::{PriorityLevel, SortParam},
-    setup_logger, Task, Tasks,
+    read_config_file, setup_logger, Config, Configurable, Task, Tasks,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -31,6 +31,7 @@ fn main() -> Result<()> {
     let args = utd::args::Cli::parse();
     // don't drop guard
     let _guard = setup_logger(args.log.unwrap_or(utd::args::LogLevel::Trace));
+    let config = read_config_file()?;
 
     // Adding a new note/task
     if args.note.is_some() || args.add.is_some() {
@@ -51,22 +52,26 @@ fn main() -> Result<()> {
     if args.re_set_ids {
         make_ids_sequential()?;
     }
-    display_content(args.sort.as_ref())?;
-
+    display_content(&config, args.sort.as_ref())?;
     Ok(())
 }
 
-fn display_content(args: Option<&SortParam>) -> Result<()> {
-    let color = White.bold().paint(greeting());
+fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
+    let title_message = draw_titles(&config.sections.title, &greeting());
     let tasks = if let Some(sort) = args {
         order_tasks(*sort)?
     } else {
         state_file_contents()?
     };
     let mut table = TableBuilder::new()
-        .style(TableStyle::blank())
+        .style(match &*config.borders {
+            "elegant" => TableStyle::extended(),
+            "extended" => TableStyle::elegant(),
+            "empty" => TableStyle::empty(),
+            _ => unreachable!(),
+        })
         .rows(vec![Row::new(vec![TableCell::new_with_alignment(
-            color,
+            title_message,
             2,
             Alignment::Center,
         )])])
@@ -80,64 +85,247 @@ fn display_content(args: Option<&SortParam>) -> Result<()> {
     for (index, i) in set_tasks.iter().enumerate() {
         if i.is_task && !i.in_progress {
             if index == 0 {
-                let task_count = tasks.iter().filter(|f| f.is_task).count();
-                let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
-                let heading_to_do = Blue
-                    .bold()
-                    .underline()
-                    .paint(format!("to-do [{}/{}]", completed_count, task_count));
-                table.add_row(Row::new(vec![
-                    TableCell::new(draw_heading(heading_to_do));
-                    1
-                ]));
+                draw_todo_title(config, &tasks, &mut table);
             }
-            let task = format!("{}. {}", i.id, &i.name);
-            table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done, 4));
-                1
-            ]));
+            draw_todo_list(config, i, &mut table);
         }
     }
 
     for (index, i) in in_progress.iter().enumerate() {
         if i.in_progress {
             if index == 0 {
-                let heading_to_do = Green.bold().underline().paint("in progress");
-                table.add_row(Row::new(vec![
-                    TableCell::new(format!(
-                        "      {}",
-                        heading_to_do
-                    ));
-                    1
-                ]));
+                draw_progress_title(config, &mut table);
             }
-            let task = format!("{}. {}", i.id, &i.name);
-            table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done, 6));
-                1
-            ]));
+            draw_progress_list(config, i, &mut table);
         }
     }
 
     for (index, i) in notes.iter().enumerate() {
         if !i.is_task {
             if index == 0 {
-                let heading_to_do = Yellow.bold().underline().paint("notes");
-                table.add_row(Row::new(vec![
-                    TableCell::new(draw_heading(heading_to_do));
-                    1
-                ]));
+                draw_notes_title(config, &mut table);
             }
-            let task = format!("{}. {}", i.id, &i.name);
-            table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done, 4));
-                1
-            ]));
+            draw_notes_list(config, i, &mut table);
         }
     }
 
     println!("{}", table.render());
     Ok(())
+}
+
+fn draw_progress_list(config: &Config, task: &Task, table: &mut Table) {
+    let task_title = format!("{}. {}", task.id, &task.name);
+    let res = draw_lists(
+        &config.sections.in_progress,
+        task.is_done,
+        task_title,
+        &task.priority,
+    );
+    table.add_row(Row::new(vec![TableCell::new(res); 1]));
+}
+
+fn draw_notes_list(config: &Config, task: &Task, table: &mut Table) {
+    let task_title = format!("{}. {}", task.id, &task.name);
+    let res = draw_lists(
+        &config.sections.notes,
+        task.is_done,
+        task_title,
+        &task.priority,
+    );
+    table.add_row(Row::new(vec![TableCell::new(res); 1]));
+}
+fn draw_todo_list(config: &Config, task: &Task, table: &mut Table) {
+    let task_title = format!("{}. {}", task.id, &task.name);
+    let res = draw_lists(
+        &config.sections.todo,
+        task.is_done,
+        task_title,
+        &task.priority,
+    );
+    table.add_row(Row::new(vec![TableCell::new(res); 1]));
+}
+
+fn draw_lists<'a>(
+    config: &'a impl Configurable,
+    completed: bool,
+    value: String,
+    priority: &'a str,
+) -> String {
+    let mut padding = String::default();
+    for _ in 0..config.indent_spaces() + 2 {
+        padding.push(' ');
+    }
+
+    let value = if config.entry_icon_suffix() {
+        if completed {
+            format!("{}{}", value, config.completed_icon())
+        } else {
+            format!("{}{}", value, config.entry_icon())
+        }
+    } else if completed {
+        format!("{}{}", config.completed_icon(), value)
+    } else {
+        format!("{}{}", config.entry_icon(), value)
+    };
+    let hex_title = match completed {
+        false => match &*priority {
+            "low" => hex_to_rgb(config.colour_low()),
+            "normal" => hex_to_rgb(config.colour_normal()),
+            "high" => hex_to_rgb(config.colour_high()),
+            _ => unreachable!(),
+        },
+        true => hex_to_rgb(config.colour_completed()),
+    };
+
+    let heading = if config.dim_completed() {
+        if config.title_italic() && config.title_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .italic()
+                .strikethrough()
+                .dimmed()
+                .bold()
+        } else if config.entry_italic() && !config.entry_bold() && !completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2).italic()
+        } else if !config.entry_italic() && config.entry_bold() && !completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2).bold()
+        } else if !config.entry_italic() && !config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .strikethrough()
+                .dimmed()
+        } else if !config.entry_italic() && config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .strikethrough()
+                .dimmed()
+                .bold()
+        } else if config.entry_italic() && config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .italic()
+                .bold()
+                .dimmed()
+                .strikethrough()
+        } else if config.entry_italic() && !config.entry_bold() && completed {
+            RGB(hex_title.0, hex_title.1, hex_title.2)
+                .italic()
+                .dimmed()
+                .strikethrough()
+        } else {
+            RGB(hex_title.0, hex_title.1, hex_title.2).normal()
+        }
+    } else if config.title_italic() && config.title_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .strikethrough()
+            .bold()
+    } else if config.entry_italic() && !config.entry_bold() && !completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic()
+    } else if !config.entry_italic() && config.entry_bold() && !completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2).bold()
+    } else if !config.entry_italic() && !config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2).strikethrough()
+    } else if !config.entry_italic() && config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .strikethrough()
+            .bold()
+    } else if config.entry_italic() && config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .bold()
+            .strikethrough()
+    } else if config.entry_italic() && !config.entry_bold() && completed {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .strikethrough()
+    } else {
+        RGB(hex_title.0, hex_title.1, hex_title.2).normal()
+    };
+    let vals = heading.paint(value);
+    format!("{padding}{vals}")
+}
+
+fn draw_titles(title: &impl Configurable, value: impl AsRef<str>) -> ANSIGenericString<str> {
+    let hex_title = hex_to_rgb(title.title_colour());
+    let heading = if title.title_italic() && title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .underline()
+            .bold()
+    } else if title.title_italic() && !title.title_bold() && !title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic()
+    } else if !title.title_italic() && title.title_bold() && !title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).bold()
+    } else if !title.title_italic() && !title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).underline()
+    } else if !title.title_italic() && title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .underline()
+            .bold()
+    } else if title.title_italic() && title.title_bold() && !title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2).italic().bold()
+    } else if title.title_italic() && !title.title_bold() && title.title_underline() {
+        RGB(hex_title.0, hex_title.1, hex_title.2)
+            .italic()
+            .underline()
+    } else {
+        RGB(hex_title.0, hex_title.1, hex_title.2).normal()
+    };
+    heading.paint(if !title.title_icon_suffix() {
+        format!("{}{}", title.title_icon(), value.as_ref())
+    } else {
+        format!("{}{}", value.as_ref(), title.title_icon())
+    })
+}
+
+fn draw_todo_title(config: &Config, tasks: &Tasks, table: &mut Table) {
+    let task_count = tasks.iter().filter(|f| f.is_task).count();
+    let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
+    let heading_to_do = format!("to-do [{}/{}]", completed_count, task_count);
+    let heading_to_do = draw_titles(&config.sections.todo, &heading_to_do);
+    let heading = config.sections.todo.indent_spaces();
+    let mut padding = String::default();
+    for _ in 0..heading {
+        padding.push(' ')
+    }
+    table.add_row(Row::new(vec![
+        TableCell::new(format!(
+            "{}{}",
+            padding, heading_to_do
+        ));
+        1
+    ]));
+}
+
+fn draw_progress_title(config: &Config, table: &mut Table) {
+    let heading = String::from("in progress");
+    let heading_to_do = draw_titles(&config.sections.in_progress, &heading);
+    let heading = config.sections.in_progress.indent_spaces();
+    let mut padding = String::default();
+    for _ in 0..heading {
+        padding.push(' ')
+    }
+    table.add_row(Row::new(vec![
+        TableCell::new(format!(
+            "{}{}",
+            padding, heading_to_do
+        ));
+        1
+    ]));
+}
+
+fn draw_notes_title(config: &Config, table: &mut Table) {
+    let heading = String::from("notes");
+    let heading_to_do = draw_titles(&config.sections.notes, &heading);
+    let heading = config.sections.notes.indent_spaces();
+    let mut padding = String::default();
+    for _ in 0..heading {
+        padding.push(' ')
+    }
+    table.add_row(Row::new(vec![
+        TableCell::new(format!(
+            "{}{}",
+            padding, heading_to_do
+        ));
+        1
+    ]));
 }
 
 fn order_tasks(sort: utd::args::SortParam) -> Result<Tasks> {
@@ -366,7 +554,11 @@ fn draw_entry(task: String, completed: bool, indent_spaces: u8) -> String {
         padding.push(' ');
     }
     if completed {
-        format!("{padding}{}", Green.strikethrough().dimmed().paint(task))
+        format!(
+            "{padding} {} {}",
+            Green.paint("✓"),
+            Green.strikethrough().dimmed().paint(task)
+        )
     } else {
         format!("{padding}{task}")
     }
@@ -374,4 +566,11 @@ fn draw_entry(task: String, completed: bool, indent_spaces: u8) -> String {
 
 fn draw_heading(heading: ANSIGenericString<str>) -> String {
     format!("  {}", heading)
+}
+
+fn hex_to_rgb(hex_colour: &str) -> (u8, u8, u8) {
+    let first = u8::from_str_radix(&hex_colour[1..3], 16).unwrap();
+    let second = u8::from_str_radix(&hex_colour[3..5], 16).unwrap();
+    let third = u8::from_str_radix(&hex_colour[5..7], 16).unwrap();
+    (first, second, third)
 }
