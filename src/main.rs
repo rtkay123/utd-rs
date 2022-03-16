@@ -22,7 +22,7 @@ use tracing::{debug, trace};
 use utd::{
     are_you_on_unix,
     args::{PriorityLevel, SortParam},
-    setup_logger, Task, Tasks,
+    read_config_file, setup_logger, Task, Tasks,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -31,6 +31,7 @@ fn main() -> Result<()> {
     let args = utd::args::Cli::parse();
     // don't drop guard
     let _guard = setup_logger(args.log.unwrap_or(utd::args::LogLevel::Trace));
+    println!("{:#?}", read_config_file());
 
     // Adding a new note/task
     if args.note.is_some() || args.add.is_some() {
