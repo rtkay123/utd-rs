@@ -66,18 +66,20 @@ fn display_content() -> Result<()> {
             Alignment::Center,
         )])])
         .build();
-    let task_count = tasks.iter().filter(|f| f.is_task).count();
-    let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
-    let heading_to_do = Blue
-        .bold()
-        .underline()
-        .paint(format!("to-do [{}/{}]", completed_count, task_count));
-    table.add_row(Row::new(vec![
-        TableCell::new(draw_heading(heading_to_do));
-        1
-    ]));
-    for i in tasks.iter() {
+    for (index, i) in tasks.iter().enumerate() {
         if i.is_task {
+            if index == 0 {
+                let task_count = tasks.iter().filter(|f| f.is_task).count();
+                let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
+                let heading_to_do = Blue
+                    .bold()
+                    .underline()
+                    .paint(format!("to-do [{}/{}]", completed_count, task_count));
+                table.add_row(Row::new(vec![
+                    TableCell::new(draw_heading(heading_to_do));
+                    1
+                ]));
+            }
             let task = format!("{}. {}", i.id, &i.name);
             table.add_row(Row::new(vec![
                 TableCell::new(draw_entry(task, i.is_done, 4));
@@ -85,13 +87,15 @@ fn display_content() -> Result<()> {
             ]));
         }
     }
-    let heading_to_do = Yellow.bold().underline().paint("notes");
-    table.add_row(Row::new(vec![
-        TableCell::new(draw_heading(heading_to_do));
-        1
-    ]));
-    for i in tasks.iter() {
+    for (index, i) in tasks.iter().enumerate() {
         if !i.is_task {
+            if index == 0 {
+                let heading_to_do = Yellow.bold().underline().paint("notes");
+                table.add_row(Row::new(vec![
+                    TableCell::new(draw_heading(heading_to_do));
+                    1
+                ]));
+            }
             let task = format!("{}. {}", i.id, &i.name);
             table.add_row(Row::new(vec![
                 TableCell::new(draw_entry(task, i.is_done, 4));
