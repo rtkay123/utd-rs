@@ -306,7 +306,7 @@ impl Configurable for InProgress {
     }
 
     fn dim_completed(&self) -> bool {
-        todo!()
+        true
     }
 
     fn title_icon(&self) -> &str {

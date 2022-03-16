@@ -94,37 +94,18 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
     for (index, i) in in_progress.iter().enumerate() {
         if i.in_progress {
             if index == 0 {
-                let heading_to_do = Green.bold().underline().paint("in progress");
-                table.add_row(Row::new(vec![
-                    TableCell::new(format!(
-                        "      {}",
-                        heading_to_do
-                    ));
-                    1
-                ]));
+                draw_progress_title(config, &mut table);
             }
-            let task = format!("{}. {}", i.id, &i.name);
-            table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done, 6));
-                1
-            ]));
+            draw_progress_list(config, i, &mut table);
         }
     }
 
     for (index, i) in notes.iter().enumerate() {
         if !i.is_task {
             if index == 0 {
-                let heading_to_do = Yellow.bold().underline().paint("notes");
-                table.add_row(Row::new(vec![
-                    TableCell::new(draw_heading(heading_to_do));
-                    1
-                ]));
+                draw_notes_title(config, &mut table);
             }
-            let task = format!("{}. {}", i.id, &i.name);
-            table.add_row(Row::new(vec![
-                TableCell::new(draw_entry(task, i.is_done, 4));
-                1
-            ]));
+            draw_notes_list(config, i, &mut table);
         }
     }
 
@@ -132,6 +113,27 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
     Ok(())
 }
 
+fn draw_progress_list(config: &Config, task: &Task, table: &mut Table) {
+    let task_title = format!("{}. {}", task.id, &task.name);
+    let res = draw_lists(
+        &config.sections.in_progress,
+        task.is_done,
+        task_title,
+        &task.priority,
+    );
+    table.add_row(Row::new(vec![TableCell::new(res); 1]));
+}
+
+fn draw_notes_list(config: &Config, task: &Task, table: &mut Table) {
+    let task_title = format!("{}. {}", task.id, &task.name);
+    let res = draw_lists(
+        &config.sections.notes,
+        task.is_done,
+        task_title,
+        &task.priority,
+    );
+    table.add_row(Row::new(vec![TableCell::new(res); 1]));
+}
 fn draw_todo_list(config: &Config, task: &Task, table: &mut Table) {
     let task_title = format!("{}. {}", task.id, &task.name);
     let res = draw_lists(
@@ -238,17 +240,6 @@ fn draw_lists<'a>(
     };
     let vals = heading.paint(value);
     format!("{padding}{vals}")
-    /*
-    if completed {
-        format!(
-            "{padding} {} {}",
-            Green.paint("✓"),
-            Green.strikethrough().dimmed().paint(task)
-        )
-    } else {
-        format!("{padding}{task}")
-    }*/
-    //todo!()
 }
 
 fn draw_titles(title: &impl Configurable, value: impl AsRef<str>) -> ANSIGenericString<str> {
@@ -290,6 +281,40 @@ fn draw_todo_title(config: &Config, tasks: &Tasks, table: &mut Table) {
     let heading_to_do = format!("to-do [{}/{}]", completed_count, task_count);
     let heading_to_do = draw_titles(&config.sections.todo, &heading_to_do);
     let heading = config.sections.todo.indent_spaces();
+    let mut padding = String::default();
+    for _ in 0..heading {
+        padding.push(' ')
+    }
+    table.add_row(Row::new(vec![
+        TableCell::new(format!(
+            "{}{}",
+            padding, heading_to_do
+        ));
+        1
+    ]));
+}
+
+fn draw_progress_title(config: &Config, table: &mut Table) {
+    let heading = String::from("in progress");
+    let heading_to_do = draw_titles(&config.sections.in_progress, &heading);
+    let heading = config.sections.in_progress.indent_spaces();
+    let mut padding = String::default();
+    for _ in 0..heading {
+        padding.push(' ')
+    }
+    table.add_row(Row::new(vec![
+        TableCell::new(format!(
+            "{}{}",
+            padding, heading_to_do
+        ));
+        1
+    ]));
+}
+
+fn draw_notes_title(config: &Config, table: &mut Table) {
+    let heading = String::from("notes");
+    let heading_to_do = draw_titles(&config.sections.notes, &heading);
+    let heading = config.sections.notes.indent_spaces();
     let mut padding = String::default();
     for _ in 0..heading {
         padding.push(' ')
