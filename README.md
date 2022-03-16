@@ -12,6 +12,9 @@
     <img alt="License" src="https://svgshare.com/i/ZhY.svg">
 </div>
 
+<h2 align="center">Demo</h2>
+<a href="https://asciinema.org/a/71Gtt0yWETb4nCGJdJ7bc1DNF?speed=2"><img src="https://asciinema.org/a/71Gtt0yWETb4nCGJdJ7bc1DNF.png" width="836"/></a>
+
 ## Installation
 
 You need to install the `rustup` package, which provides `cargo`. Check your package manager for availability. If it's unavailable, you can get the latest stable version of `rustup` by running:
