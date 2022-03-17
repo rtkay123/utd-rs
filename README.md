@@ -74,7 +74,14 @@ This adds 3 tasks with custom priorities to your board (default priority is norm
 
 Run `utd -h` to view help.
 
-# Customising
+# Configuration
 
-`utd` reads a `config.toml` file from your `$XDG_CONFIG_HOME` which you may use to customise the interface.
+`utd` doesn't create a config file for you, but it looks for one in the following locations:
+  -  `$XDG_CONFIG_HOME/utd.toml`
+  -  `$XDG_CONFIG_HOME/utd/config.toml`
 
+### Windows
+  -  `%APPDATA%\Roaming\utd\utd.toml`
+  -  `%APPDATA%\Roaming\utd\utd\config.toml`
+
+The default configuration file can be found in the repo, [here](config.toml)
