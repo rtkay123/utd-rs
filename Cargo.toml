@@ -9,7 +9,7 @@ homepage = "https://github.com/kawaki-san/ugly-todo-rs"
 repository = "https://github.com/kawaki-san/ugly-todo-rs"
 keywords = ["kanban","todo","notes","tasks","minimal"]
 categories = ["command-line-utilities", "visualization"]
-authors = ["Kawaki <dev@kanjala.com>"]
+authors = ["Rodney K. <dev@kanjala.com>"]
 
 [dependencies]
 clap = { version = "3.1.6", features = [ "derive", "cargo" ] }
@@ -23,6 +23,10 @@ term-table = "1.3.2"
 ansi_term = "0.12.1"
 rand = "0.8.5"
 toml = "0.5.8"
+
+[build-dependencies]
+clap_mangen = "0.1"
+clap = { version = "3.1.6", features = [ "derive", "cargo" ] }
 
 [target.'cfg(unix)'.dependencies]
 xdg = "2.4.1"
