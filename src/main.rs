@@ -17,9 +17,8 @@ use term_table::{
 };
 use tracing::{debug, trace};
 use utd::{
-    are_you_on_unix,
     args::{PriorityLevel, SortParam},
-    read_config_file, setup_logger, Config, Configurable, Tags, Task, Tasks,
+    data_dir, read_config_file, setup_logger, Config, Configurable, Tags, Task, Tasks,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -513,7 +512,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
         tasks.append(&mut entries);
         write_to_file(file, &tasks);
     };
-    let mut path = are_you_on_unix();
+    let mut path = data_dir();
     path.push(".utd.json");
     // if note is some, iterate and add notes
     let default_vec = &vec![
@@ -549,7 +548,7 @@ fn write_to_file(file: &mut File, tasks: &Tasks) {
 }
 
 fn state_file_contents() -> Result<Tasks> {
-    let mut path = are_you_on_unix();
+    let mut path = data_dir();
     path.push(".utd.json");
     let read_file = std::fs::OpenOptions::new()
         .create(true)
@@ -569,14 +568,14 @@ fn state_file_contents() -> Result<Tasks> {
 }
 
 fn update_file(tasks: &Tasks) -> Result<()> {
-    let mut path = are_you_on_unix();
+    let mut path = data_dir();
     path.push(".temp");
     let mut temp = std::fs::OpenOptions::new()
         .create(true)
         .write(true)
         .open(&path)?;
     write_to_file(&mut temp, tasks);
-    let mut original = are_you_on_unix();
+    let mut original = data_dir();
     original.push(".utd.json");
     std::fs::rename(path, original)?;
     Ok(())
