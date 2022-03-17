@@ -5,6 +5,7 @@
     <img alt="License" src="https://img.shields.io/static/v1?label=license&message=MIT%20OR%20Apache-2.0&color=blue&style=plastic">
     <img alt="Status" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg">
     <img alt="Language" src="https://img.shields.io/badge/Made%20with-Rust-1f425f.svg">
+    <img alt="Crates.io" src="https://img.shields.io/crates/v/utd?style=plastic">
 </div>
 <div align="center">
     <img alt="License" src="https://svgshare.com/i/Zhy.svg">
