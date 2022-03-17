@@ -444,10 +444,10 @@ impl Configurable for Notes {
     }
 }
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
-pub fn read_config_file() -> Result<Config> {
+pub fn read_config_file(retry: bool) -> Result<Config> {
     let op = std::fs::OpenOptions::new()
         .read(true)
-        .open(get_config_file_path());
+        .open(get_config_file_path(retry));
     match op {
         Ok(contents) => {
             let mut buf_reader = std::io::BufReader::new(contents);
@@ -464,9 +464,13 @@ pub fn read_config_file() -> Result<Config> {
         }
         Err(e) => match e.kind() {
             std::io::ErrorKind::NotFound => {
-                let file = include_bytes!("../config.toml");
-                let contents = String::from_utf8_lossy(file);
-                Ok(toml::from_str(&contents)?)
+                if !retry {
+                    read_config_file(true)
+                } else {
+                    let file = include_bytes!("../config.toml");
+                    let contents = String::from_utf8_lossy(file);
+                    Ok(toml::from_str(&contents)?)
+                }
             }
             _ => {
                 error!("{}", e);
@@ -476,13 +480,13 @@ pub fn read_config_file() -> Result<Config> {
     }
 }
 
-#[cfg(not(target_family = "unix"))]
-fn get_config_file_path() {
-    // TODO windows
-}
-
-#[cfg(target_family = "unix")]
-fn get_config_file_path() -> std::path::PathBuf {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("utd").unwrap();
-    xdg_dirs.get_config_file("config.toml")
+fn get_config_file_path(retry: bool) -> std::path::PathBuf {
+    use directories::ProjectDirs;
+    let dirs = ProjectDirs::from("org", "Ugly Todo", "utd").unwrap();
+    let dirs = dirs.config_dir();
+    if retry {
+        dirs.with_file_name("utd.toml")
+    } else {
+        dirs.with_file_name("utd/config.toml")
+    }
 }

@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     let args = utd::args::Cli::parse();
     // don't drop guard
     let _guard = setup_logger(args.log.unwrap_or(utd::args::LogLevel::Trace));
-    let config = read_config_file()?;
+    let config = read_config_file(false)?;
 
     // Adding a new note/task
     if args.note.is_some() || args.add.is_some() {
@@ -551,7 +551,12 @@ fn write_to_file(file: &mut File, tasks: &Tasks) {
 fn state_file_contents() -> Result<Tasks> {
     let mut path = are_you_on_unix();
     path.push(".utd.json");
-    let read_file = std::fs::OpenOptions::new().read(true).open(&path).unwrap();
+    let read_file = std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .read(true)
+        .open(&path)
+        .unwrap();
     let mut buf_reader = std::io::BufReader::new(read_file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents)?;

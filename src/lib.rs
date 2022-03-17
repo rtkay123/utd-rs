@@ -31,15 +31,8 @@ pub fn setup_logger(log_level: args::LogLevel) -> tracing_appender::non_blocking
     guard
 }
 
-// This function only gets compiled if the target family is unix
-#[cfg(target_family = "unix")]
 pub fn are_you_on_unix() -> PathBuf {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("utd").unwrap();
-    xdg_dirs.get_state_home()
-}
-
-// And this function only gets compiled if the target family is *not* unix
-#[cfg(not(target_family = "unix"))]
-pub fn are_you_on_unix() -> &'static str {
-    "where does windows store logs even?"
+    use directories::ProjectDirs;
+    let dirs = ProjectDirs::from("org", "Ugly Todo", "utd").unwrap();
+    dirs.data_local_dir().to_path_buf()
 }
