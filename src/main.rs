@@ -15,7 +15,7 @@ use term_table::{
     table_cell::{Alignment, TableCell},
     Table, TableBuilder, TableStyle,
 };
-use tracing::{debug, trace};
+use tracing::{debug, error, trace};
 use utd::{
     args::{PriorityLevel, SortParam},
     data_dir, read_config_file, setup_logger, Config, Configurable, Tags, Task, Tasks,
@@ -31,24 +31,38 @@ fn main() -> Result<()> {
 
     // Adding a new note/task
     if args.note.is_some() || args.add.is_some() {
-        new_entry(&args)?;
+        if let Err(e) = new_entry(&args) {
+            error!("{e}");
+        }
     }
     if args.delete.is_some() {
-        delete_entry(&args.delete.unwrap())?;
+        if let Err(e) = delete_entry(&args.delete.unwrap()) {
+            error!("{e}");
+        }
     }
     if args.begin.is_some() {
-        alter_tasks(&args.begin.unwrap(), State::Started)?;
+        if let Err(e) = alter_tasks(&args.begin.unwrap(), State::Started) {
+            error!("{e}");
+        }
     }
     if args.check.is_some() {
-        alter_tasks(&args.check.unwrap(), State::Completed)?;
+        if let Err(e) = alter_tasks(&args.check.unwrap(), State::Completed) {
+            error!("{e}");
+        }
     }
     if args.tidy {
-        remove_completed()?;
+        if let Err(e) = remove_completed() {
+            error!("{e}");
+        }
     }
     if args.re_set_ids {
-        make_ids_sequential()?;
+        if let Err(e) = make_ids_sequential() {
+            error!("{e}");
+        }
     }
-    display_content(&config, args.sort.as_ref())?;
+    if let Err(e) = display_content(&config, args.sort.as_ref()) {
+        error!("{e}");
+    }
     Ok(())
 }
 
@@ -421,7 +435,7 @@ enum State {
 fn alter_tasks(ids: &[String], state: State) -> Result<()> {
     let mut tasks = state_file_contents()?;
     for i in ids.iter() {
-        let i: usize = i.parse().unwrap();
+        let i: usize = i.parse()?;
         let vals = tasks
             .clone()
             .into_iter()
@@ -452,10 +466,11 @@ fn alter_tasks(ids: &[String], state: State) -> Result<()> {
 fn delete_entry(ids: &[String]) -> Result<()> {
     let mut tasks = state_file_contents()?;
     for i in ids.iter() {
+        let num: i64 = i.parse()?;
         tasks = tasks
             .iter()
             .filter_map(|f| {
-                if f.id != i.parse::<i64>().unwrap() {
+                if f.id != num {
                     Some(f.to_owned())
                 } else {
                     None
@@ -480,8 +495,9 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
     let entry_adder = |list: &[String],
                        is_task: bool,
                        file: &mut File,
-                       priority: &mut VecDeque<&PriorityLevel>| {
-        let mut tasks: Tasks = state_file_contents().unwrap();
+                       priority: &mut VecDeque<&PriorityLevel>|
+     -> Result<()> {
+        let mut tasks: Tasks = state_file_contents()?;
         {
             // Check if file has data in it
             if !tasks.is_empty() {
@@ -511,6 +527,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
         }
         tasks.append(&mut entries);
         write_to_file(file, &tasks);
+        Ok(())
     };
     let mut path = data_dir();
     path.push(".utd.json");
@@ -526,10 +543,10 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
 
     let mut vd = VecDeque::from_iter(args.priority.as_ref().unwrap_or(default_vec));
     if let Some(ref tasks) = args.add {
-        entry_adder(tasks, true, &mut state_file(&path, false, true)?, &mut vd);
+        entry_adder(tasks, true, &mut state_file(&path, false, true)?, &mut vd)?;
     }
     if let Some(ref notes) = args.note {
-        entry_adder(notes, false, &mut state_file(&path, false, true)?, &mut vd);
+        entry_adder(notes, false, &mut state_file(&path, false, true)?, &mut vd)?;
     }
     Ok(())
 }
