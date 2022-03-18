@@ -513,7 +513,7 @@ fn new_entry(args: &utd::args::Cli) -> Result<()> {
         };
         for entry_name in list.iter() {
             let tags: Vec<_> = RE.find_iter(entry_name).map(|f| f.as_str()).collect();
-            let title = RE.replace_all(entry_name, "");
+            let title = RE.replace_all(entry_name, " ");
             len += 1;
             let task = Task::new(
                 &title,
