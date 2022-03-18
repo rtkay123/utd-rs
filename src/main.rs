@@ -443,7 +443,7 @@ fn alter_tasks(ids: &[String], state: State) -> Result<()> {
                 if f.id as usize == i {
                     match state {
                         State::Started => {
-                            f.in_progress = true;
+                            f.in_progress = !f.in_progress;
                             debug!("starting task {}: {}", i, f.name);
                         }
                         State::Completed => {
