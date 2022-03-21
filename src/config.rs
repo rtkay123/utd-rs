@@ -8,6 +8,8 @@ use tracing::error;
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     pub borders: Option<String>,
+    #[serde(rename = "disable-title")]
+    pub disable_title: Option<bool>,
     pub tags: Option<Tags>,
     pub sections: Option<Sections>,
 }
@@ -16,6 +18,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             borders: Some(String::from("empty")),
+            disable_title: Some(false),
             tags: Some(Tags::default()),
             sections: Some(Sections::default()),
         }

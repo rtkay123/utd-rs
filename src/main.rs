@@ -72,12 +72,12 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
     let sections = section.cloned().unwrap_or_default();
     let heading_section = sections.title.as_ref();
     let heading_section = heading_section.cloned().unwrap_or_default();
-    let title_message = draw_titles(&heading_section, &greeting());
     let tasks = if let Some(sort) = args {
         order_tasks(*sort)?
     } else {
         state_file_contents()?
     };
+    let disabled_title = config.disable_title.unwrap_or(false);
     let mut table = TableBuilder::new()
         .style(
             match &*config
@@ -93,12 +93,16 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
                 _ => unreachable!(),
             },
         )
-        .rows(vec![Row::new(vec![TableCell::new_with_alignment(
+        .build();
+    if !disabled_title {
+        let title_message = draw_titles(&heading_section, &greeting());
+        table.add_row(Row::new(vec![TableCell::new_with_alignment(
             title_message,
             2,
             Alignment::Center,
-        )])])
-        .build();
+        )]))
+    }
+
     let set_tasks: Vec<_> = tasks
         .iter()
         .filter(|f| f.is_task && !f.in_progress)

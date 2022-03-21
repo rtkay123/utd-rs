@@ -1,4 +1,6 @@
 #borders = "empty" # elegant, empty or extended
+disable-title = true
+
 #
 #[sections.title]
 #underline = false
