@@ -67,19 +67,31 @@ fn main() -> Result<()> {
 }
 
 fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
-    let title_message = draw_titles(&config.sections.title, &greeting());
+    let section = config.sections.as_ref();
+    let sections = section.cloned().unwrap_or_default();
+    let heading_section = sections.title.as_ref();
+    let heading_section = heading_section.cloned().unwrap_or_default();
+    let title_message = draw_titles(&heading_section, &greeting());
     let tasks = if let Some(sort) = args {
         order_tasks(*sort)?
     } else {
         state_file_contents()?
     };
     let mut table = TableBuilder::new()
-        .style(match &*config.borders {
-            "elegant" => TableStyle::extended(),
-            "extended" => TableStyle::elegant(),
-            "empty" => TableStyle::empty(),
-            _ => unreachable!(),
-        })
+        .style(
+            match &*config
+                .borders
+                .as_ref()
+                .cloned()
+                .unwrap_or_else(|| "empty".to_string())
+                .as_str()
+            {
+                "elegant" => TableStyle::extended(),
+                "extended" => TableStyle::elegant(),
+                "empty" => TableStyle::empty(),
+                _ => unreachable!(),
+            },
+        )
         .rows(vec![Row::new(vec![TableCell::new_with_alignment(
             title_message,
             2,
@@ -126,36 +138,51 @@ fn display_content(config: &Config, args: Option<&SortParam>) -> Result<()> {
 }
 
 fn draw_progress_list(config: &Config, task: &Task, table: &mut Table) {
+    let section = config.sections.as_ref();
+    let sections = section.cloned().unwrap_or_default();
     let task_title = format!("{}. {}", task.id, &task.name);
     let res = draw_lists(
-        &config.sections.in_progress,
+        &sections.in_progress.unwrap_or_default(),
         task.is_done,
         task_title,
         &task.priority,
-        (&task.tags, &config.tags),
+        (
+            &task.tags,
+            &config.tags.as_ref().cloned().unwrap_or_default(),
+        ),
     );
     table.add_row(Row::new(vec![TableCell::new(res); 1]));
 }
 
 fn draw_notes_list(config: &Config, task: &Task, table: &mut Table) {
+    let section = config.sections.as_ref();
+    let sections = section.cloned().unwrap_or_default();
     let task_title = format!("{}. {}", task.id, &task.name);
     let res = draw_lists(
-        &config.sections.notes,
+        &sections.notes.unwrap_or_default(),
         task.is_done,
         task_title,
         &task.priority,
-        (&task.tags, &config.tags),
+        (
+            &task.tags,
+            &config.tags.as_ref().cloned().unwrap_or_default(),
+        ),
     );
     table.add_row(Row::new(vec![TableCell::new(res); 1]));
 }
 fn draw_todo_list(config: &Config, task: &Task, table: &mut Table) {
+    let section = config.sections.as_ref();
+    let sections = section.cloned().unwrap_or_default();
     let task_title = format!("{}. {}", task.id, &task.name);
     let res = draw_lists(
-        &config.sections.todo,
+        &sections.todo.unwrap_or_default(),
         task.is_done,
         task_title,
         &task.priority,
-        (&task.tags, &config.tags),
+        (
+            &task.tags,
+            &config.tags.as_ref().cloned().unwrap_or_default(),
+        ),
     );
     table.add_row(Row::new(vec![TableCell::new(res); 1]));
 }
@@ -186,14 +213,14 @@ fn draw_lists<'a>(
     /***********
      ***/
 
-    let tag_text = if tags.icon_suffix {
+    let tag_text = if tags.icon_suffix.unwrap() {
         if !tag_text.is_empty() {
-            format!("{}{}", tag_text, tags.icon)
+            format!("{}{}", tag_text, tags.icon.as_ref().unwrap())
         } else {
             tag_text.to_owned()
         }
     } else if !tag_text.is_empty() {
-        format!("{}{}", tags.icon, tag_text)
+        format!("{}{}", tags.icon.as_ref().unwrap(), tag_text)
     } else {
         tag_text.to_owned()
     };
@@ -271,27 +298,27 @@ fn draw_lists<'a>(
     };
     let vals = heading.paint(value);
     let res = format!("{padding}{vals}");
-    let hex_title_tag = hex_to_rgb(&tags.colour);
-    let tag = if tags.italic && tags.bold && tags.underline {
+    let hex_title_tag = hex_to_rgb(tags.colour.as_ref().unwrap());
+    let tag = if tags.italic.unwrap() && tags.bold.unwrap() && tags.underline.unwrap() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .italic()
             .underline()
             .bold()
-    } else if tags.italic && !tags.bold && !tags.underline {
+    } else if tags.italic.unwrap() && !tags.bold.unwrap() && !tags.underline.unwrap() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).italic()
-    } else if !tags.italic && tags.bold && !tags.underline {
+    } else if !tags.italic.unwrap() && tags.bold.unwrap() && !tags.underline.unwrap() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).bold()
-    } else if !tags.italic && !tags.bold && tags.underline {
+    } else if !tags.italic.unwrap() && !tags.bold.unwrap() && tags.underline.unwrap() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).underline()
-    } else if !tags.italic && tags.bold && tags.underline {
+    } else if !tags.italic.unwrap() && tags.bold.unwrap() && tags.underline.unwrap() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .underline()
             .bold()
-    } else if tags.italic && tags.bold && !tags.underline {
+    } else if tags.italic.unwrap() && tags.bold.unwrap() && !tags.underline.unwrap() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .italic()
             .bold()
-    } else if tags.italic && !tags.bold && tags.underline {
+    } else if tags.italic.unwrap() && !tags.bold.unwrap() && tags.underline.unwrap() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .italic()
             .underline()
@@ -336,11 +363,16 @@ fn draw_titles(title: &impl Configurable, value: impl AsRef<str>) -> ANSIGeneric
 }
 
 fn draw_todo_title(config: &Config, tasks: &Tasks, table: &mut Table) {
+    let section = config.sections.as_ref();
+    let sections = section.cloned().unwrap_or_default();
     let task_count = tasks.iter().filter(|f| f.is_task).count();
     let completed_count = tasks.iter().filter(|f| f.is_task && f.is_done).count();
     let heading_to_do = format!("to-do [{}/{}]", completed_count, task_count);
-    let heading_to_do = draw_titles(&config.sections.todo, &heading_to_do);
-    let heading = config.sections.todo.indent_spaces();
+    let heading_section = sections.todo.as_ref();
+    let heading_section = heading_section.cloned().unwrap_or_default();
+    let heading_to_do = draw_titles(&heading_section, &heading_to_do);
+    let heading = sections.todo.unwrap_or_default();
+    let heading = heading.indent_spaces();
     let mut padding = String::default();
     for _ in 0..heading {
         padding.push(' ')
@@ -355,9 +387,14 @@ fn draw_todo_title(config: &Config, tasks: &Tasks, table: &mut Table) {
 }
 
 fn draw_progress_title(config: &Config, table: &mut Table) {
+    let section = config.sections.as_ref();
+    let sections = section.cloned().unwrap_or_default();
     let heading = String::from("in progress");
-    let heading_to_do = draw_titles(&config.sections.in_progress, &heading);
-    let heading = config.sections.in_progress.indent_spaces();
+    let heading_section = sections.in_progress.as_ref();
+    let heading_section = heading_section.cloned().unwrap_or_default();
+    let heading_to_do = draw_titles(&heading_section, &heading);
+    let heading = sections.in_progress.unwrap_or_default();
+    let heading = heading.indent_spaces();
     let mut padding = String::default();
     for _ in 0..heading {
         padding.push(' ')
@@ -372,9 +409,14 @@ fn draw_progress_title(config: &Config, table: &mut Table) {
 }
 
 fn draw_notes_title(config: &Config, table: &mut Table) {
+    let section = config.sections.as_ref();
+    let sections = section.cloned().unwrap_or_default();
     let heading = String::from("notes");
-    let heading_to_do = draw_titles(&config.sections.notes, &heading);
-    let heading = config.sections.notes.indent_spaces();
+    let heading_section = sections.notes.as_ref();
+    let heading_section = heading_section.cloned().unwrap_or_default();
+    let heading_to_do = draw_titles(&heading_section, &heading);
+    let heading = sections.notes.unwrap_or_default();
+    let heading = heading.indent_spaces();
     let mut padding = String::default();
     for _ in 0..heading {
         padding.push(' ')
