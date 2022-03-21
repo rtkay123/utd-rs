@@ -47,6 +47,35 @@ impl Default for Tags {
     }
 }
 
+impl Tags {
+    pub fn colour(&self) -> &str {
+        match self.colour.as_ref() {
+            Some(c) => c,
+            None => "#689d6a",
+        }
+    }
+
+    pub fn underline(&self) -> bool {
+        self.underline.unwrap_or(false)
+    }
+    pub fn bold(&self) -> bool {
+        self.bold.unwrap_or(false)
+    }
+    pub fn italic(&self) -> bool {
+        self.italic.unwrap_or(false)
+    }
+    pub fn icon_suffix(&self) -> bool {
+        self.icon_suffix.unwrap_or(false)
+    }
+
+    pub fn icon(&self) -> &str {
+        match self.icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sections {
@@ -384,7 +413,7 @@ impl Configurable for InProgress {
     }
 
     fn dim_completed(&self) -> bool {
-        unreachable!()
+        true
     }
 
     fn title_icon(&self) -> &str {

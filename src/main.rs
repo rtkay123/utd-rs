@@ -42,6 +42,7 @@ fn main() -> Result<()> {
     }
     if args.begin.is_some() {
         if let Err(e) = alter_tasks(&args.begin.unwrap(), State::Started) {
+            println!("uhmmm: {}", e);
             error!("{e}");
         }
     }
@@ -213,14 +214,14 @@ fn draw_lists<'a>(
     /***********
      ***/
 
-    let tag_text = if tags.icon_suffix.unwrap() {
+    let tag_text = if tags.icon_suffix.unwrap_or(false) {
         if !tag_text.is_empty() {
-            format!("{}{}", tag_text, tags.icon.as_ref().unwrap())
+            format!("{}{}", tag_text, tags.icon())
         } else {
             tag_text.to_owned()
         }
     } else if !tag_text.is_empty() {
-        format!("{}{}", tags.icon.as_ref().unwrap(), tag_text)
+        format!("{}{}", tags.icon(), tag_text)
     } else {
         tag_text.to_owned()
     };
@@ -298,27 +299,27 @@ fn draw_lists<'a>(
     };
     let vals = heading.paint(value);
     let res = format!("{padding}{vals}");
-    let hex_title_tag = hex_to_rgb(tags.colour.as_ref().unwrap());
-    let tag = if tags.italic.unwrap() && tags.bold.unwrap() && tags.underline.unwrap() {
+    let hex_title_tag = hex_to_rgb(tags.colour());
+    let tag = if tags.italic() && tags.bold() && tags.underline() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .italic()
             .underline()
             .bold()
-    } else if tags.italic.unwrap() && !tags.bold.unwrap() && !tags.underline.unwrap() {
+    } else if tags.italic() && !tags.bold() && !tags.underline() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).italic()
-    } else if !tags.italic.unwrap() && tags.bold.unwrap() && !tags.underline.unwrap() {
+    } else if !tags.italic() && tags.bold() && !tags.underline() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).bold()
-    } else if !tags.italic.unwrap() && !tags.bold.unwrap() && tags.underline.unwrap() {
+    } else if !tags.italic.unwrap() && !tags.bold() && tags.underline() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2).underline()
-    } else if !tags.italic.unwrap() && tags.bold.unwrap() && tags.underline.unwrap() {
+    } else if !tags.italic() && tags.bold() && tags.underline() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .underline()
             .bold()
-    } else if tags.italic.unwrap() && tags.bold.unwrap() && !tags.underline.unwrap() {
+    } else if tags.italic() && tags.bold() && !tags.underline() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .italic()
             .bold()
-    } else if tags.italic.unwrap() && !tags.bold.unwrap() && tags.underline.unwrap() {
+    } else if tags.italic() && !tags.bold() && tags.underline() {
         RGB(hex_title_tag.0, hex_title_tag.1, hex_title_tag.2)
             .italic()
             .underline()
@@ -486,6 +487,8 @@ fn alter_tasks(ids: &[String], state: State) -> Result<()> {
                     match state {
                         State::Started => {
                             f.in_progress = !f.in_progress;
+                            f.is_done = false;
+
                             debug!("starting task {}: {}", i, f.name);
                         }
                         State::Completed => {
