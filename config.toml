@@ -1,71 +1,73 @@
-borders = "empty" # elegant, empty or extended
+#borders = "empty" # elegant, empty or extended
+disable-title = true
 
-[sections.title]
-underline = false
-bold = false
-italic = false
-icon = " "
-icon-suffix = false
-colour = "#ebdbb2"
-
-[tags]
-colour = "#689d6a"
-underline = false
-bold = false
-italic = false
-icon = "⏽" 
-icon-suffix = false
-
-[sections.todo]
-title-colour = "#458588"
-indent-spaces = 4
-title-bold = true
-title-italic = false
-title-underline = true
-title-icon = " "
-title-icon-suffix = false
-entry-icon = ""
-entry-icon-suffix = false
-entry-bold = false
-entry-italic = false
-dim-completed = false
-colour-low = "#458588"
-colour-normal = "#d65d0e"
-colour-high = "#cc241d"
-colour-completed = "#98971a"
-completed-icon = "✓ "
-
-[sections.in-progress]
-title-colour = "#d79921"
-indent-spaces = 8
-title-bold = false
-title-italic = false
-title-underline = true
-title-icon = "羽"
-title-icon-suffix = false
-entry-icon = " "
-entry-icon-suffix = false
-entry-bold = false
-entry-italic = true
-colour-low = "#458588"
-colour-normal = "#d65d0e"
-colour-high = "#cc241d"
-
-[sections.notes]
-title-colour = "#d79921"
-indent-spaces = 4
-title-bold = false
-title-italic = false
-title-underline = false
-title-icon = " "
-title-icon-suffix = false
-entry-icon = ""
-entry-icon-suffix = false
-entry-bold = false
-entry-italic = false
-dim-noted = true
-colour-low = "#ebdbb2"
-colour-normal = "#ebdbb2"
-colour-high = "#ebdbb2"
-colour-completed = "#458588"
-completed-icon = ""
+#
+#[sections.title]
+#underline = false
+#bold = false
+#italic = false
+#icon = " "
+#icon-suffix = false
+#colour = "#ebdbb2"
+#
+#[tags]
+#colour = "#689d6a"
+#underline = false
+#bold = false
+#italic = false
+#icon = "⏽" 
+#icon-suffix = false
+#
+#[sections.todo]
+#title-colour = "#458588"
+#indent-spaces = 4
+#title-bold = true
+#title-italic = false
+#title-underline = true
+#title-icon = " "
+#title-icon-suffix = false
+#entry-icon = ""
+#entry-icon-suffix = false
+#entry-bold = false
+#entry-italic = false
+#dim-completed = false
+#colour-low = "#458588"
+#colour-normal = "#d65d0e"
+#colour-high = "#cc241d"
+#colour-completed = "#98971a"
+#completed-icon = "✓ "
+#
+#[sections.in-progress]
+#title-colour = "#d79921"
+#indent-spaces = 8
+#title-bold = false
+#title-italic = false
+#title-underline = true
+#title-icon = "羽"
+#title-icon-suffix = false
+#entry-icon = " "
+#entry-icon-suffix = false
+#entry-bold = false
+#entry-italic = true
+#colour-low = "#458588"
+#colour-normal = "#d65d0e"
+#colour-high = "#cc241d"
+#
+#[sections.notes]
+#title-colour = "#d79921"
+#indent-spaces = 4
+#title-bold = false
+#title-italic = false
+#title-underline = false
+#title-icon = " "
+#title-icon-suffix = false
+#entry-icon = ""
+#entry-icon-suffix = false
+#entry-bold = false
+#entry-italic = false
+#dim-noted = true
+#colour-low = "#ebdbb2"
+#colour-normal = "#ebdbb2"
+#colour-high = "#ebdbb2"
+#colour-completed = "#458588"
+#completed-icon = ""

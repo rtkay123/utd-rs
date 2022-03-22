@@ -4,69 +4,145 @@ use serde::Deserialize;
 use serde::Serialize;
 use tracing::error;
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    pub borders: String,
-    pub tags: Tags,
-    pub sections: Sections,
+    pub borders: Option<String>,
+    #[serde(rename = "disable-title")]
+    pub disable_title: Option<bool>,
+    pub tags: Option<Tags>,
+    pub sections: Option<Sections>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            borders: Some(String::from("empty")),
+            disable_title: Some(false),
+            tags: Some(Tags::default()),
+            sections: Some(Sections::default()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Tags {
-    pub colour: String,
-    pub underline: bool,
-    pub bold: bool,
-    pub italic: bool,
-    pub icon: String,
+    pub colour: Option<String>,
+    pub underline: Option<bool>,
+    pub bold: Option<bool>,
+    pub italic: Option<bool>,
+    pub icon: Option<String>,
     #[serde(rename = "icon-suffix")]
-    pub icon_suffix: bool,
+    pub icon_suffix: Option<bool>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+impl Default for Tags {
+    fn default() -> Self {
+        Self {
+            colour: Some(String::from("#689d6a")),
+            underline: Some(false),
+            bold: Some(false),
+            italic: Some(false),
+            icon: Some(String::default()),
+            icon_suffix: Some(false),
+        }
+    }
+}
+
+impl Tags {
+    pub fn colour(&self) -> &str {
+        match self.colour.as_ref() {
+            Some(c) => c,
+            None => "#689d6a",
+        }
+    }
+
+    pub fn underline(&self) -> bool {
+        self.underline.unwrap_or(false)
+    }
+    pub fn bold(&self) -> bool {
+        self.bold.unwrap_or(false)
+    }
+    pub fn italic(&self) -> bool {
+        self.italic.unwrap_or(false)
+    }
+    pub fn icon_suffix(&self) -> bool {
+        self.icon_suffix.unwrap_or(false)
+    }
+
+    pub fn icon(&self) -> &str {
+        match self.icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sections {
-    pub title: Title,
-    pub todo: Todo,
+    pub title: Option<Title>,
+    pub todo: Option<Todo>,
     #[serde(rename = "in-progress")]
-    pub in_progress: InProgress,
-    pub notes: Notes,
+    pub in_progress: Option<InProgress>,
+    pub notes: Option<Notes>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+impl Default for Sections {
+    fn default() -> Self {
+        Self {
+            title: Some(Title::default()),
+            todo: Some(Todo::default()),
+            in_progress: Some(InProgress::default()),
+            notes: Some(Notes::default()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Title {
-    pub underline: bool,
-    pub bold: bool,
-    pub italic: bool,
-    pub icon: String,
+    pub underline: Option<bool>,
+    pub bold: Option<bool>,
+    pub italic: Option<bool>,
+    pub icon: Option<String>,
     #[serde(rename = "icon-suffix")]
-    pub icon_suffix: bool,
-    pub colour: String,
+    pub icon_suffix: Option<bool>,
+    pub colour: Option<String>,
 }
-impl Configurable for Title {
-    fn title_colour(&self) -> &str {
-        &self.colour
+
+impl Default for Title {
+    fn default() -> Self {
+        Self {
+            underline: Some(false),
+            bold: Some(false),
+            italic: Some(false),
+            icon: Some(String::default()),
+            icon_suffix: Some(false),
+            colour: Some(String::from("#ebdbb2")),
+        }
     }
+}
+
+impl Configurable for Title {
     fn indent_spaces(&self) -> u8 {
         unimplemented!()
     }
-
     fn title_bold(&self) -> bool {
-        self.bold
+        self.bold.unwrap_or(false)
     }
 
     fn title_italic(&self) -> bool {
-        self.italic
+        self.italic.unwrap_or(false)
     }
 
     fn title_underline(&self) -> bool {
-        self.underline
+        self.underline.unwrap_or(false)
     }
 
     fn title_icon_suffix(&self) -> bool {
-        self.icon_suffix
+        self.icon_suffix.unwrap_or(false)
     }
 
     fn entry_icon_suffix(&self) -> bool {
@@ -86,7 +162,10 @@ impl Configurable for Title {
     }
 
     fn title_icon(&self) -> &str {
-        &self.icon
+        match self.icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
     }
 
     fn entry_icon(&self) -> &str {
@@ -101,14 +180,21 @@ impl Configurable for Title {
         unimplemented!()
     }
 
-    fn completed_icon(&self) -> &str {
-        unimplemented!()
-    }
     fn colour_high(&self) -> &str {
         unimplemented!()
     }
 
     fn colour_completed(&self) -> &str {
+        unimplemented!()
+    }
+    fn title_colour(&self) -> &str {
+        match self.colour.as_ref() {
+            Some(c) => c,
+            None => "#ebdbb2",
+        }
+    }
+
+    fn completed_icon(&self) -> &str {
         unimplemented!()
     }
 }
@@ -117,39 +203,39 @@ impl Configurable for Title {
 #[serde(rename_all = "camelCase")]
 pub struct Todo {
     #[serde(rename = "title-colour")]
-    pub title_colour: String,
+    pub title_colour: Option<String>,
     #[serde(rename = "indent-spaces")]
-    pub indent_spaces: i64,
+    pub indent_spaces: Option<i64>,
     #[serde(rename = "title-bold")]
-    pub title_bold: bool,
+    pub title_bold: Option<bool>,
     #[serde(rename = "title-italic")]
-    pub title_italic: bool,
+    pub title_italic: Option<bool>,
     #[serde(rename = "title-underline")]
-    pub title_underline: bool,
+    pub title_underline: Option<bool>,
     #[serde(rename = "title-icon")]
-    pub title_icon: String,
+    pub title_icon: Option<String>,
     #[serde(rename = "title-icon-suffix")]
-    pub title_icon_suffix: bool,
+    pub title_icon_suffix: Option<bool>,
     #[serde(rename = "entry-icon")]
-    pub entry_icon: String,
+    pub entry_icon: Option<String>,
     #[serde(rename = "entry-icon-suffix")]
-    pub entry_icon_suffix: bool,
+    pub entry_icon_suffix: Option<bool>,
     #[serde(rename = "entry-bold")]
-    pub entry_bold: bool,
+    pub entry_bold: Option<bool>,
     #[serde(rename = "entry-italic")]
-    pub entry_italic: bool,
+    pub entry_italic: Option<bool>,
     #[serde(rename = "dim-completed")]
-    pub dim_completed: bool,
+    pub dim_completed: Option<bool>,
     #[serde(rename = "colour-low")]
-    pub colour_low: String,
+    pub colour_low: Option<String>,
     #[serde(rename = "colour-normal")]
-    pub colour_normal: String,
+    pub colour_normal: Option<String>,
     #[serde(rename = "colour-high")]
-    pub colour_high: String,
+    pub colour_high: Option<String>,
     #[serde(rename = "colour-completed")]
-    pub colour_completed: String,
+    pub colour_completed: Option<String>,
     #[serde(rename = "completed-icon")]
-    pub completed_icon: String,
+    pub completed_icon: Option<String>,
 }
 
 pub trait Configurable {
@@ -173,70 +259,94 @@ pub trait Configurable {
 }
 
 impl Configurable for Todo {
-    fn title_colour(&self) -> &str {
-        &self.title_colour
-    }
     fn indent_spaces(&self) -> u8 {
-        self.indent_spaces as u8
+        self.indent_spaces.unwrap_or(4).try_into().unwrap()
     }
-
     fn title_bold(&self) -> bool {
-        self.title_bold
+        self.title_bold.unwrap_or(true)
     }
 
     fn title_italic(&self) -> bool {
-        self.title_italic
+        self.title_italic.unwrap_or(false)
     }
 
     fn title_underline(&self) -> bool {
-        self.title_underline
+        self.title_underline.unwrap_or(true)
     }
 
     fn title_icon_suffix(&self) -> bool {
-        self.title_icon_suffix
+        self.title_icon_suffix.unwrap_or(false)
     }
 
     fn entry_icon_suffix(&self) -> bool {
-        self.entry_icon_suffix
+        self.entry_icon_suffix.unwrap_or(false)
     }
 
     fn entry_bold(&self) -> bool {
-        self.entry_bold
+        self.entry_bold.unwrap_or(false)
     }
 
     fn entry_italic(&self) -> bool {
-        self.entry_italic
+        self.entry_italic.unwrap_or(false)
     }
 
     fn dim_completed(&self) -> bool {
-        self.dim_completed
+        self.dim_completed.unwrap_or(false)
     }
 
     fn title_icon(&self) -> &str {
-        &self.title_icon
+        match self.title_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
     }
 
     fn entry_icon(&self) -> &str {
-        &self.entry_icon
+        match self.entry_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
     }
 
     fn colour_low(&self) -> &str {
-        &self.colour_low
+        match self.colour_low.as_ref() {
+            Some(c) => c,
+            None => "#458588",
+        }
     }
 
     fn colour_normal(&self) -> &str {
-        &self.colour_normal
+        match self.colour_normal.as_ref() {
+            Some(c) => c,
+            None => "#d65d0e",
+        }
     }
 
     fn colour_high(&self) -> &str {
-        &self.colour_high
-    }
-    fn completed_icon(&self) -> &str {
-        &self.completed_icon
+        match self.colour_high.as_ref() {
+            Some(c) => c,
+            None => "#cc241d",
+        }
     }
 
     fn colour_completed(&self) -> &str {
-        &self.colour_completed
+        match self.colour_completed.as_ref() {
+            Some(c) => c,
+            None => "#98971a",
+        }
+    }
+    fn title_colour(&self) -> &str {
+        match self.title_colour.as_ref() {
+            Some(c) => c,
+            None => "#458588",
+        }
+    }
+
+    fn completed_icon(&self) -> &str {
+        match self.completed_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
     }
 }
 
@@ -244,65 +354,65 @@ impl Configurable for Todo {
 #[serde(rename_all = "camelCase")]
 pub struct InProgress {
     #[serde(rename = "title-colour")]
-    pub title_colour: String,
+    pub title_colour: Option<String>,
     #[serde(rename = "indent-spaces")]
-    pub indent_spaces: i64,
+    pub indent_spaces: Option<i64>,
     #[serde(rename = "title-bold")]
-    pub title_bold: bool,
+    pub title_bold: Option<bool>,
     #[serde(rename = "title-italic")]
-    pub title_italic: bool,
+    pub title_italic: Option<bool>,
     #[serde(rename = "title-underline")]
-    pub title_underline: bool,
+    pub title_underline: Option<bool>,
     #[serde(rename = "title-icon")]
-    pub title_icon: String,
+    pub title_icon: Option<String>,
     #[serde(rename = "title-icon-suffix")]
-    pub title_icon_suffix: bool,
+    pub title_icon_suffix: Option<bool>,
     #[serde(rename = "entry-icon")]
-    pub entry_icon: String,
+    pub entry_icon: Option<String>,
     #[serde(rename = "entry-icon-suffix")]
-    pub entry_icon_suffix: bool,
+    pub entry_icon_suffix: Option<bool>,
     #[serde(rename = "entry-bold")]
-    pub entry_bold: bool,
+    pub entry_bold: Option<bool>,
     #[serde(rename = "entry-italic")]
-    pub entry_italic: bool,
+    pub entry_italic: Option<bool>,
     #[serde(rename = "colour-low")]
-    pub colour_low: String,
+    pub colour_low: Option<String>,
     #[serde(rename = "colour-normal")]
-    pub colour_normal: String,
+    pub colour_normal: Option<String>,
     #[serde(rename = "colour-high")]
-    pub colour_high: String,
+    pub colour_high: Option<String>,
 }
 impl Configurable for InProgress {
     fn indent_spaces(&self) -> u8 {
-        self.indent_spaces as u8
+        self.indent_spaces.unwrap_or(8).try_into().unwrap()
     }
 
     fn title_bold(&self) -> bool {
-        self.title_bold
+        self.title_bold.unwrap_or(false)
     }
 
     fn title_italic(&self) -> bool {
-        self.title_italic
+        self.title_italic.unwrap_or(false)
     }
 
     fn title_underline(&self) -> bool {
-        self.title_underline
+        self.title_underline.unwrap_or(true)
     }
 
     fn title_icon_suffix(&self) -> bool {
-        self.title_icon_suffix
+        self.title_icon_suffix.unwrap_or(false)
     }
 
     fn entry_icon_suffix(&self) -> bool {
-        self.entry_icon_suffix
+        self.entry_icon_suffix.unwrap_or(false)
     }
 
     fn entry_bold(&self) -> bool {
-        self.entry_bold
+        self.entry_bold.unwrap_or(false)
     }
 
     fn entry_italic(&self) -> bool {
-        self.entry_italic
+        self.entry_italic.unwrap_or(true)
     }
 
     fn dim_completed(&self) -> bool {
@@ -310,137 +420,203 @@ impl Configurable for InProgress {
     }
 
     fn title_icon(&self) -> &str {
-        &self.title_icon
+        match self.title_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
+    }
+
+    fn entry_icon(&self) -> &str {
+        match self.entry_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
+    }
+    fn colour_low(&self) -> &str {
+        match self.colour_low.as_ref() {
+            Some(c) => c,
+            None => "#458588",
+        }
+    }
+
+    fn colour_normal(&self) -> &str {
+        match self.colour_normal.as_ref() {
+            Some(c) => c,
+            None => "#d65d0e",
+        }
+    }
+
+    fn colour_high(&self) -> &str {
+        match self.colour_high.as_ref() {
+            Some(c) => c,
+            None => "#cc241d",
+        }
     }
 
     fn colour_completed(&self) -> &str {
         unimplemented!()
     }
-    fn entry_icon(&self) -> &str {
-        &self.entry_icon
-    }
-
-    fn colour_low(&self) -> &str {
-        &self.colour_low
-    }
-
-    fn colour_normal(&self) -> &str {
-        &self.colour_normal
-    }
-
-    fn colour_high(&self) -> &str {
-        &self.colour_high
-    }
     fn title_colour(&self) -> &str {
-        &self.title_colour
+        match self.title_colour.as_ref() {
+            Some(c) => c,
+            None => "#d79921",
+        }
     }
     fn completed_icon(&self) -> &str {
         unimplemented!()
     }
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Notes {
     #[serde(rename = "title-colour")]
-    pub title_colour: String,
+    pub title_colour: Option<String>,
     #[serde(rename = "indent-spaces")]
-    pub indent_spaces: i64,
+    pub indent_spaces: Option<i64>,
     #[serde(rename = "title-bold")]
-    pub title_bold: bool,
+    pub title_bold: Option<bool>,
     #[serde(rename = "title-italic")]
-    pub title_italic: bool,
+    pub title_italic: Option<bool>,
     #[serde(rename = "title-underline")]
-    pub title_underline: bool,
+    pub title_underline: Option<bool>,
     #[serde(rename = "title-icon")]
-    pub title_icon: String,
+    pub title_icon: Option<String>,
     #[serde(rename = "title-icon-suffix")]
-    pub title_icon_suffix: bool,
+    pub title_icon_suffix: Option<bool>,
     #[serde(rename = "entry-icon")]
-    pub entry_icon: String,
+    pub entry_icon: Option<String>,
     #[serde(rename = "entry-icon-suffix")]
-    pub entry_icon_suffix: bool,
+    pub entry_icon_suffix: Option<bool>,
     #[serde(rename = "entry-bold")]
-    pub entry_bold: bool,
+    pub entry_bold: Option<bool>,
     #[serde(rename = "entry-italic")]
-    pub entry_italic: bool,
+    pub entry_italic: Option<bool>,
     #[serde(rename = "dim-noted")]
-    pub dim_noted: bool,
+    pub dim_noted: Option<bool>,
     #[serde(rename = "colour-low")]
-    pub colour_low: String,
+    pub colour_low: Option<String>,
     #[serde(rename = "colour-normal")]
-    pub colour_normal: String,
+    pub colour_normal: Option<String>,
     #[serde(rename = "colour-high")]
-    pub colour_high: String,
+    pub colour_high: Option<String>,
     #[serde(rename = "colour-completed")]
-    pub colour_completed: String,
+    pub colour_completed: Option<String>,
     #[serde(rename = "completed-icon")]
-    pub completed_icon: String,
+    pub completed_icon: Option<String>,
+}
+
+impl Default for Notes {
+    fn default() -> Self {
+        Self {
+            title_colour: Some(String::from("#d79921")),
+            indent_spaces: Some(4),
+            title_bold: Some(false),
+            title_italic: Some(false),
+            title_underline: Some(false),
+            title_icon: Some(String::default()),
+            title_icon_suffix: Some(false),
+            entry_icon: Some(String::default()),
+            entry_icon_suffix: Some(false),
+            entry_bold: Some(false),
+            entry_italic: Some(false),
+            dim_noted: Some(true),
+            colour_low: Some("#ebdbb2".to_owned()),
+            colour_normal: Some("#ebdbb2".to_owned()),
+            colour_high: Some("#ebdbb2".to_owned()),
+            colour_completed: Some("#458588".to_owned()),
+            completed_icon: Some(String::default()),
+        }
+    }
 }
 
 impl Configurable for Notes {
-    fn title_colour(&self) -> &str {
-        &self.title_colour
-    }
     fn indent_spaces(&self) -> u8 {
-        self.indent_spaces as u8
+        self.indent_spaces.unwrap_or(4).try_into().unwrap()
     }
-
     fn title_bold(&self) -> bool {
-        self.title_bold
+        self.title_bold.unwrap_or(false)
     }
 
     fn title_italic(&self) -> bool {
-        self.title_italic
+        self.title_italic.unwrap_or(false)
     }
 
     fn title_underline(&self) -> bool {
-        self.title_underline
+        self.title_underline.unwrap_or(false)
     }
-    fn colour_completed(&self) -> &str {
-        &self.colour_completed
-    }
+
     fn title_icon_suffix(&self) -> bool {
-        self.title_icon_suffix
+        self.title_icon_suffix.unwrap_or(false)
     }
-
     fn entry_icon_suffix(&self) -> bool {
-        self.entry_icon_suffix
+        self.entry_icon_suffix.unwrap_or(false)
     }
-
     fn entry_bold(&self) -> bool {
-        self.entry_bold
+        self.entry_bold.unwrap_or(false)
     }
 
     fn entry_italic(&self) -> bool {
-        self.entry_italic
+        self.entry_italic.unwrap_or(false)
     }
 
-    fn completed_icon(&self) -> &str {
-        &self.completed_icon
-    }
     fn dim_completed(&self) -> bool {
-        self.dim_noted
+        self.dim_noted.unwrap_or(true)
     }
 
     fn title_icon(&self) -> &str {
-        &self.title_icon
+        match self.title_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
     }
 
     fn entry_icon(&self) -> &str {
-        &self.entry_icon
+        match self.entry_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
     }
-
     fn colour_low(&self) -> &str {
-        &self.colour_low
+        match self.colour_low.as_ref() {
+            Some(c) => c,
+            None => "#ebdbb2",
+        }
     }
 
     fn colour_normal(&self) -> &str {
-        &self.colour_normal
+        match self.colour_normal.as_ref() {
+            Some(c) => c,
+            None => "#ebdbb2",
+        }
     }
 
     fn colour_high(&self) -> &str {
-        &self.colour_high
+        match self.colour_high.as_ref() {
+            Some(c) => c,
+            None => "#ebdbb2",
+        }
+    }
+
+    fn colour_completed(&self) -> &str {
+        match self.colour_completed.as_ref() {
+            Some(c) => c,
+            None => "#ebdbb2",
+        }
+    }
+
+    fn title_colour(&self) -> &str {
+        match self.title_colour.as_ref() {
+            Some(c) => c,
+            None => "#d79921",
+        }
+    }
+
+    fn completed_icon(&self) -> &str {
+        match self.completed_icon.as_ref() {
+            Some(c) => c,
+            None => "",
+        }
     }
 }
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
